@@ -1,27 +1,27 @@
-package root;
+package communication;
 
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-public class Connection {
+public class SocketConnection implements SocketCommunicable {
     private String hostAddress;
     private int port;
 
-    private Socket clientSocket;
+    private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
 
-    public Connection(String hostAddress, int port) {
+    public SocketConnection(String hostAddress, int port) {
         this.hostAddress = hostAddress;
         this.port = port;
     }
 
     public void connect() {
         try {
-            clientSocket = new Socket(hostAddress, port);
-            out = new PrintWriter(clientSocket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            socket = new Socket(hostAddress, port);
+            out = new PrintWriter(socket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         } catch (UnknownHostException e) {
             System.out.println(String.format("Unknown host: %s", hostAddress));
             System.exit(1);
@@ -35,7 +35,7 @@ public class Connection {
         try {
             in.close();
             out.close();
-            clientSocket.close();
+            socket.close();
         } catch (IOException e) {
             System.out.println(String.format("Exception while closing the socket and its streams."));
             System.out.println(e.getMessage());
@@ -43,12 +43,20 @@ public class Connection {
         }
     }
 
+    @Override
     public void send(String message) {
-        out.println(message + "\n");
+        if (out != null) {
+            out.println(message);
+        }
     }
 
-    public Socket getClientSocket() {
-        return clientSocket;
+    @Override
+    public String receive() throws IOException {
+        return (in != null) ? in.readLine() : null;
+    }
+
+    public Socket getSocket() {
+        return socket;
     }
 
     public PrintWriter getOut() {
