@@ -38,7 +38,6 @@ public class Root extends Server {
 
         String query = this.receive();
         while (query != null && !query.equalsIgnoreCase("end")) {
-            System.out.println(query);
             Set<String> keywords = parseQuery(query);
             for (String keyword : keywords) {
                 SocketConnection connection = workerConnections.get(targetConnection);
@@ -46,7 +45,22 @@ public class Root extends Server {
                 targetConnection = (targetConnection + 1) % workerConnections.size();
             }
 
+            receiveWorkerResponses(query);
+
             query = this.receive();
+        }
+    }
+
+    public void receiveWorkerResponses(String query) throws IOException {
+        System.out.println("query: " + query);
+        for (SocketConnection workerConnection : workerConnections) {
+            String response = workerConnection.receive();
+            while (response != null && !response.equalsIgnoreCase("end")) {
+                System.out.println(workerConnection);
+                System.out.println(response);
+                System.out.println("----------");
+                response = workerConnection.receive();
+            }
         }
     }
 

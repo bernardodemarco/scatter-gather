@@ -3,7 +3,6 @@ package worker;
 import communication.Server;
 
 import java.io.*;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class Worker extends Server {
@@ -49,6 +48,13 @@ public class Worker extends Server {
         return count;
     }
 
+    public void sendOccurrences(Map<String, Long> occurrences) {
+        occurrences.entrySet().stream()
+                .filter(entry -> entry.getValue() > 0)
+                .forEach(entry -> this.send(String.format("%s %s", entry.getKey(), entry.getValue())));
+        this.send("end");
+    }
+
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
             System.out.println("A port number is required.");
@@ -61,8 +67,9 @@ public class Worker extends Server {
 
         String keyword;
         while ((keyword = worker.receive()) != null) {
-            System.out.println("Received: " + keyword);
-            System.out.println(worker.findOccurrences(keyword));
+            Map<String, Long> occurrences = worker.findOccurrences(keyword);
+            System.out.println(keyword + " " + occurrences);
+            worker.sendOccurrences(occurrences);
         }
 
         worker.stop();

@@ -38,8 +38,6 @@ public class Client {
             System.out.println(e.getMessage());
         }
 
-        System.out.println(queries);
-
         return queries;
     }
 
