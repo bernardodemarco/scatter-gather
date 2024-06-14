@@ -1,15 +1,21 @@
 package client;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+
+import java.nio.file.Paths;
+
+import java.util.List;
+import java.util.ArrayList;
+
 import communication.SocketConnection;
 
-import java.io.*;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-
 public class Client {
-    private SocketConnection connection;
-    private List<String> queries;
+    private final SocketConnection connection;
+    private final List<String> queries;
 
     public Client() {
         this.queries = readQueries();
@@ -17,7 +23,7 @@ public class Client {
         connection.connect();
     }
 
-    public List<String> readQueries() {
+    private List<String> readQueries() {
         List<String> queries = new ArrayList<>();
 
         File queriesFile = new File("src/textFiles/queries.txt");
@@ -41,30 +47,44 @@ public class Client {
         return queries;
     }
 
-    public void sendQueries() {
+    private String getResponse() {
+        return connection.receive();
+    }
+
+    private void sendQuery(String query) {
+        connection.send(query);
+    }
+
+    private void displayResponse(String response) {
+        System.out.println(response);
+    }
+
+    private void sleep() {
+        int sleepTime = (int) (Math.random() * (2000 - 1000 + 1)) + 1000;
+        try {
+            Thread.sleep(sleepTime);
+        } catch (InterruptedException e) {
+            System.out.println("Interrupted while waiting to send queries");
+        }
+    }
+
+    public void run() {
         queries.forEach(query -> {
-            System.out.println(query);
-            connection.send(query);
-            try {
-                System.out.println(connection.receive());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            int sleepTime = (int) (Math.random() * (2000 - 1000 + 1)) + 1000;
-            try {
-                Thread.sleep(sleepTime);
-            } catch (InterruptedException e) {
-                System.out.println("Interrupted while waiting to send queries");
-            }
+            sendQuery(query);
+            String response = getResponse();
+            displayResponse(response);
+            sleep();
         });
+    }
+
+    public void closeServerConnection() {
+        connection.send("end");
+        connection.stop();
     }
 
     public static void main(String[] args) {
         Client client = new Client();
-
-        client.sendQueries();
-        client.connection.send("end");
-
-        client.connection.stop();
+        client.run();
+        client.closeServerConnection();
     }
 }
