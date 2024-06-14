@@ -45,7 +45,11 @@ public class Client {
         queries.forEach(query -> {
             System.out.println(query);
             connection.send(query);
-
+            try {
+                System.out.println(connection.receive());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             int sleepTime = (int) (Math.random() * (2000 - 1000 + 1)) + 1000;
             try {
                 Thread.sleep(sleepTime);
@@ -58,7 +62,6 @@ public class Client {
     public static void main(String[] args) {
         Client client = new Client();
 
-        client.connection.send("Starting to send queries");
         client.sendQueries();
         client.connection.send("end");
 

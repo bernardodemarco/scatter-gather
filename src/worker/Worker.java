@@ -4,6 +4,7 @@ import communication.Server;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Worker extends Server {
     private List<File> textFiles = initTextFiles();
@@ -26,6 +27,7 @@ public class Worker extends Server {
             occurrences.put(file.getName(), numberOfOccurrences);
         }
 
+        System.out.println(keyword + " -> " + occurrences);
         return occurrences;
     }
 
@@ -36,9 +38,11 @@ public class Worker extends Server {
             String line;
 
             while ((line = reader.readLine()) != null) {
-                count = Arrays.stream(line.split("[\\s,.]"))
+                long occurrencesInLine = Arrays.stream(line.split("[\\s,.]"))
                         .filter(word -> word.equalsIgnoreCase(keyword))
                         .count();
+
+                count += occurrencesInLine;
             }
         } catch (Exception e) {
             System.out.println("An error occurred while reading the queries file.");
@@ -49,10 +53,15 @@ public class Worker extends Server {
     }
 
     public void sendOccurrences(Map<String, Long> occurrences) {
-        occurrences.entrySet().stream()
-                .filter(entry -> entry.getValue() > 0)
-                .forEach(entry -> this.send(String.format("%s %s", entry.getKey(), entry.getValue())));
-        this.send("end");
+        String output = occurrences.entrySet().stream()
+//                .filter(entry -> entry.getValue() > 0)
+                .map(entry -> String.format("%s %s", entry.getKey(), entry.getValue()))
+                .collect(Collectors.joining(";"));
+
+        System.out.println(output);
+//        if (!output.isBlank()) {
+        this.send(output);
+//        }
     }
 
     public static void main(String[] args) throws IOException {
@@ -67,8 +76,9 @@ public class Worker extends Server {
 
         String keyword;
         while ((keyword = worker.receive()) != null) {
+//            System.out.println(keyword);
             Map<String, Long> occurrences = worker.findOccurrences(keyword);
-            System.out.println(keyword + " " + occurrences);
+//            System.out.println(keyword + " " + occurrences); //ok
             worker.sendOccurrences(occurrences);
         }
 

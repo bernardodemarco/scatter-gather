@@ -51,7 +51,7 @@ public class SocketConnection implements SocketCommunicable {
     }
 
     @Override
-    public String receive() throws IOException {
+    public synchronized String receive() throws IOException {
         return (in != null) ? in.readLine() : null;
     }
 
