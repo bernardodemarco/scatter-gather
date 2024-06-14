@@ -1,33 +1,39 @@
 package root;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
+import java.util.Map;
+import java.util.Set;
+import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import communication.Server;
+
 import scatterGather.ScatterGatherService;
 
-public class Root extends Server {
-    private ScatterGatherService scatterGather = new ScatterGatherService(List.of(8001, 8002));
+public class Root {
+    private final Server server = new Server();
+    private final ScatterGatherService scatterGather = new ScatterGatherService(List.of(8001, 8002));
 
     public Set<String> parseQuery(String query) {
         return new HashSet<>(List.of(query.split("\\s")));
     }
 
-    public void handleRequests() throws IOException, ExecutionException, InterruptedException {
-        String query = this.receive();
+    public void handleRequests() {
+        String query = this.server.receive();
         while (query != null && !query.equalsIgnoreCase("end")) {
             this.sendJobs(query);
             List<String> responses = this.receiveJobsResponse();
-            this.send(this.generateClientResponse(responses).toString());
 
-            query = this.receive();
+            //
+            this.server.send(this.generateClientResponse(responses).toString());
+
+            query = this.server.receive();
         }
     }
 
+
+    //
     public Map<String, Integer> generateClientResponse(List<String> rawResponses) {
-//        this.parseClientResponses(rawResponses);
-//        String textFilesDirectoryPath = "src/textFiles";
         Map<String, Integer> responses = new HashMap<>();
 
         for (String rawResponse : rawResponses) {
@@ -52,27 +58,26 @@ public class Root extends Server {
         return responses;
     }
 
-//    public String parseClientResponses(List<String> responses) {
-//
-//    }
-
-    public List<String> receiveJobsResponse() throws ExecutionException, InterruptedException {
+    public List<String> receiveJobsResponse() {
         return scatterGather.gather();
     }
 
     public void sendJobs(String query) {
-            Set<String> keywords = parseQuery(query);
-            scatterGather.scatter(keywords);
+        Set<String> keywords = parseQuery(query);
+        scatterGather.scatter(keywords);
     }
 
+    public Server getServer() {
+        return server;
+    }
 
-    public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
+    public static void main(String[] args) {
         Root root = new Root();
-        root.listen(8000);
+        root.getServer().listen(8000);
 
         root.handleRequests();
 
         root.scatterGather.stopService();
-        root.stop();
+        root.getServer().stop();
     }
 }

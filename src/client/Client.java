@@ -11,15 +11,15 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.ArrayList;
 
-import communication.SocketConnection;
+import communication.ClientConnection;
 
 public class Client {
-    private final SocketConnection connection;
+    private final ClientConnection connection;
     private final List<String> queries;
 
     public Client() {
         this.queries = readQueries();
-        connection = new SocketConnection("127.0.0.1", 8000);
+        connection = new ClientConnection("127.0.0.1", 8000);
         connection.connect();
     }
 

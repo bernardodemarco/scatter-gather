@@ -1,13 +1,22 @@
 package worker;
 
-import communication.Server;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.BufferedReader;
 
-import java.io.*;
-import java.util.*;
+import java.util.Map;
+import java.util.List;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-public class Worker extends Server {
-    private List<File> textFiles = initTextFiles();
+import communication.Server;
+
+public class Worker {
+    private final Server server = new Server();
+    private final List<File> textFiles = initTextFiles();
 
     public List<File> initTextFiles() {
         String textFilesDirectoryPath = "src/textFiles";
@@ -27,7 +36,6 @@ public class Worker extends Server {
             occurrences.put(file.getName(), numberOfOccurrences);
         }
 
-        System.out.println(keyword + " -> " + occurrences);
         return occurrences;
     }
 
@@ -54,14 +62,14 @@ public class Worker extends Server {
 
     public void sendOccurrences(Map<String, Long> occurrences) {
         String output = occurrences.entrySet().stream()
-//                .filter(entry -> entry.getValue() > 0)
                 .map(entry -> String.format("%s %s", entry.getKey(), entry.getValue()))
                 .collect(Collectors.joining(";"));
 
-        System.out.println(output);
-//        if (!output.isBlank()) {
-        this.send(output);
-//        }
+        this.server.send(output);
+    }
+
+    public Server getServer() {
+        return server;
     }
 
     public static void main(String[] args) throws IOException {
@@ -72,16 +80,14 @@ public class Worker extends Server {
 
         int port = Integer.parseInt(args[0]);
         Worker worker = new Worker();
-        worker.listen(port);
+        worker.getServer().listen(port);
 
         String keyword;
-        while ((keyword = worker.receive()) != null) {
-//            System.out.println(keyword);
+        while ((keyword = worker.getServer().receive()) != null) {
             Map<String, Long> occurrences = worker.findOccurrences(keyword);
-//            System.out.println(keyword + " " + occurrences); //ok
             worker.sendOccurrences(occurrences);
         }
 
-        worker.stop();
+        worker.getServer().stop();
     }
 }

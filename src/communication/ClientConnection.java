@@ -1,18 +1,22 @@
 package communication;
 
-import java.io.*;
+import java.io.PrintWriter;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-public class SocketConnection implements SocketCommunicable {
-    private String hostAddress;
-    private int port;
+public class ClientConnection {
+    private final String hostAddress;
+    private final int port;
 
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
 
-    public SocketConnection(String hostAddress, int port) {
+    public ClientConnection(String hostAddress, int port) {
         this.hostAddress = hostAddress;
         this.port = port;
     }
@@ -23,10 +27,10 @@ public class SocketConnection implements SocketCommunicable {
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         } catch (UnknownHostException e) {
-            System.out.println(String.format("Unknown host: %s", hostAddress));
+            System.out.printf("Unknown host: %s%n", hostAddress);
             System.exit(1);
         } catch (IOException e) {
-            System.out.println(String.format("Exception while getting %s connection input/output", hostAddress));
+            System.out.printf("Exception while getting %s connection input/output%n", hostAddress);
             System.exit(1);
         }
     }
@@ -37,34 +41,24 @@ public class SocketConnection implements SocketCommunicable {
             out.close();
             socket.close();
         } catch (IOException e) {
-            System.out.println(String.format("Exception while closing the socket and its streams."));
+            System.out.println("Exception while closing the socket and its streams.");
             System.out.println(e.getMessage());
             System.exit(1);
         }
     }
 
-    @Override
     public void send(String message) {
         if (out != null) {
             out.println(message);
         }
     }
 
-    @Override
-    public synchronized String receive() throws IOException {
-        return (in != null) ? in.readLine() : null;
-    }
-
-    public Socket getSocket() {
-        return socket;
-    }
-
-    public PrintWriter getOut() {
-        return out;
-    }
-
-    public BufferedReader getIn() {
-        return in;
+    public synchronized String receive() {
+        try {
+            return (in != null) ? in.readLine() : null;
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     @Override
