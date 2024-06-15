@@ -8,7 +8,7 @@ import java.util.HashSet;
 
 import communication.Server;
 
-import scatterGather.ScatterGatherService;
+import communication.ScatterGatherService;
 
 public class Root {
     private final Server server = new Server();
@@ -21,7 +21,8 @@ public class Root {
     public void handleRequests() {
         String query = this.server.receive();
         while (query != null && !query.equalsIgnoreCase("end")) {
-            this.sendJobs(query);
+            Set<String> keywords = parseQuery(query);
+            this.sendJobs(keywords);
             List<String> responses = this.receiveJobsResponse();
 
             //
@@ -30,7 +31,6 @@ public class Root {
             query = this.server.receive();
         }
     }
-
 
     //
     public Map<String, Integer> generateClientResponse(List<String> rawResponses) {
@@ -62,13 +62,16 @@ public class Root {
         return scatterGather.gather();
     }
 
-    public void sendJobs(String query) {
-        Set<String> keywords = parseQuery(query);
+    public void sendJobs(Set<String> keywords) {
         scatterGather.scatter(keywords);
     }
 
     public Server getServer() {
         return server;
+    }
+
+    public ScatterGatherService getScatterGather() {
+        return scatterGather;
     }
 
     public static void main(String[] args) {
@@ -77,7 +80,7 @@ public class Root {
 
         root.handleRequests();
 
-        root.scatterGather.stopService();
+        root.getScatterGather().stopService();
         root.getServer().stop();
     }
 }

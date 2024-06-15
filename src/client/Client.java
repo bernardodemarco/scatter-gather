@@ -26,7 +26,7 @@ public class Client {
     private List<String> readQueries() {
         List<String> queries = new ArrayList<>();
 
-        File queriesFile = new File("src/textFiles/queries.txt");
+        File queriesFile = new File("src/client/queries.txt");
 
         try (BufferedReader reader = new BufferedReader(new FileReader(queriesFile))) {
             String query;

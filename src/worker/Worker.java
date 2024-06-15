@@ -19,7 +19,7 @@ public class Worker {
     private final List<File> textFiles = initTextFiles();
 
     public List<File> initTextFiles() {
-        String textFilesDirectoryPath = "src/textFiles";
+        String textFilesDirectoryPath = "src/files";
         int numberOfFiles = 5;
         List<File> files = new ArrayList<>();
         for (int i = 0; i < numberOfFiles; i++) {
@@ -72,7 +72,7 @@ public class Worker {
         return server;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         if (args.length != 1) {
             System.out.println("A port number is required.");
             System.exit(1);

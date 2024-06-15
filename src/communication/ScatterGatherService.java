@@ -1,4 +1,4 @@
-package scatterGather;
+package communication;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -7,8 +7,6 @@ import java.util.Collection;
 import java.util.concurrent.Future;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
-
-import communication.ClientConnection;
 
 public class ScatterGatherService {
     private final List<ClientConnection> connections;
