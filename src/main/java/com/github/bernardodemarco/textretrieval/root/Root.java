@@ -6,15 +6,19 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import com.github.bernardodemarco.textretrieval.client.dto.QueryDTO;
 import com.github.bernardodemarco.textretrieval.communication.ScatterGatherService;
 import com.github.bernardodemarco.textretrieval.communication.Server;
+import com.google.gson.Gson;
 
 public class Root {
     private final Server server = new Server();
     private final ScatterGatherService scatterGather = new ScatterGatherService(List.of(8001, 8002));
+    private final Gson gson = new Gson();
 
     public Set<String> parseQuery(String query) {
-        return new HashSet<>(List.of(query.split("\\s")));
+        String parsedQuery = gson.fromJson(query, QueryDTO.class).getQuery();
+        return new HashSet<>(List.of(parsedQuery.split("\\s")));
     }
 
     public void handleRequests() {

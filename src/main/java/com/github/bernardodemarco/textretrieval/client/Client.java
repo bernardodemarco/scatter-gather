@@ -8,14 +8,19 @@ import java.io.FileNotFoundException;
 
 import java.nio.file.Paths;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
+import com.github.bernardodemarco.textretrieval.client.dto.QueryDTO;
 import com.github.bernardodemarco.textretrieval.communication.ClientConnection;
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
 
 public class Client {
     private final ClientConnection connection;
     private final List<String> queries;
+    private final Gson gson = new Gson();
 
     public Client() {
         this.queries = readQueries();
@@ -24,27 +29,17 @@ public class Client {
     }
 
     private List<String> readQueries() {
-        List<String> queries = new ArrayList<>();
-
-        File queriesFile = new File("src/main/java/com/github/bernardodemarco/textretrieval/client/queries.txt");
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(queriesFile))) {
-            String query;
-
-            while ((query = reader.readLine()) != null) {
-                queries.add(query);
-            }
-        } catch (FileNotFoundException e) {
-            System.out.println("Queries file not found: " + queriesFile.getAbsolutePath());
-            System.out.println("Current path (`.`): " + Paths.get(".").toAbsolutePath().normalize());
-            System.out.println(e.getMessage());
-            System.exit(1);
+        String queriesFilePath = "src/main/java/com/github/bernardodemarco/textretrieval/client/queries.json";
+        try (JsonReader fileReader = new JsonReader(new FileReader(queriesFilePath))) {
+            return Arrays.asList(gson.fromJson(fileReader, String[].class));
         } catch (IOException e) {
-            System.out.println("An error occurred while reading the queries file.");
-            System.out.println(e.getMessage());
-        }
+            String errorMessage = String.format(
+                    "Queries file not found [%s], current path [%s]",
+                    queriesFilePath, Paths.get(".").toAbsolutePath().normalize()
+            );
 
-        return queries;
+            throw new RuntimeException(errorMessage, e);
+        }
     }
 
     private String getResponse() {
@@ -52,7 +47,9 @@ public class Client {
     }
 
     private void sendQuery(String query) {
-        connection.send(query);
+        String payload = gson.toJson(new QueryDTO(query));
+        System.out.println("PAYLOAD = " + payload);
+        connection.send(payload);
     }
 
     private void displayResponse(String response) {
