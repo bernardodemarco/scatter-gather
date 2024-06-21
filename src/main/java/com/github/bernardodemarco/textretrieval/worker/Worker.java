@@ -1,8 +1,7 @@
-package worker;
+package com.github.bernardodemarco.textretrieval.worker;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.io.BufferedReader;
 
 import java.util.Map;
@@ -12,14 +11,15 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-import communication.Server;
+import com.github.bernardodemarco.textretrieval.communication.Server;
+import com.google.gson.Gson;
 
 public class Worker {
     private final Server server = new Server();
     private final List<File> textFiles = initTextFiles();
 
     public List<File> initTextFiles() {
-        String textFilesDirectoryPath = "src/files";
+        String textFilesDirectoryPath = "src/main/java/com/github/bernardodemarco/textretrieval/textfiles";
         int numberOfFiles = 5;
         List<File> files = new ArrayList<>();
         for (int i = 0; i < numberOfFiles; i++) {
@@ -79,6 +79,7 @@ public class Worker {
         }
 
         int port = Integer.parseInt(args[0]);
+        System.out.println("Port in JSON =" + new Gson().toJson(port));
         Worker worker = new Worker();
         worker.getServer().listen(port);
 

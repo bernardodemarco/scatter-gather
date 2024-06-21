@@ -1,0 +1,6 @@
+/home/bernardodemarco/college/parallel-and-distributed-programing/distributed-computing/text-retrieval/src/main/java/com/github/bernardodemarco/textretrieval/client/Client.java
+/home/bernardodemarco/college/parallel-and-distributed-programing/distributed-computing/text-retrieval/src/main/java/com/github/bernardodemarco/textretrieval/communication/Server.java
+/home/bernardodemarco/college/parallel-and-distributed-programing/distributed-computing/text-retrieval/src/main/java/com/github/bernardodemarco/textretrieval/communication/ClientConnection.java
+/home/bernardodemarco/college/parallel-and-distributed-programing/distributed-computing/text-retrieval/src/main/java/com/github/bernardodemarco/textretrieval/worker/Worker.java
+/home/bernardodemarco/college/parallel-and-distributed-programing/distributed-computing/text-retrieval/src/main/java/com/github/bernardodemarco/textretrieval/root/Root.java
+/home/bernardodemarco/college/parallel-and-distributed-programing/distributed-computing/text-retrieval/src/main/java/com/github/bernardodemarco/textretrieval/communication/ScatterGatherService.java

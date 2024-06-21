@@ -1,4 +1,4 @@
-package communication;
+package com.github.bernardodemarco.textretrieval.communication;
 
 import java.io.BufferedReader;
 import java.io.IOException;

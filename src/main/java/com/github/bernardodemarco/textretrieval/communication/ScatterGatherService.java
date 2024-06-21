@@ -1,4 +1,4 @@
-package communication;
+package com.github.bernardodemarco.textretrieval.communication;
 
 import java.util.List;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package root;
+package com.github.bernardodemarco.textretrieval.root;
 
 import java.util.Map;
 import java.util.Set;
@@ -6,9 +6,8 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import communication.Server;
-
-import communication.ScatterGatherService;
+import com.github.bernardodemarco.textretrieval.communication.ScatterGatherService;
+import com.github.bernardodemarco.textretrieval.communication.Server;
 
 public class Root {
     private final Server server = new Server();

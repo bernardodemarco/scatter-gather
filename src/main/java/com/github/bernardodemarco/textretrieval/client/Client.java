@@ -1,4 +1,4 @@
-package client;
+package com.github.bernardodemarco.textretrieval.client;
 
 import java.io.File;
 import java.io.FileReader;
@@ -11,7 +11,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.ArrayList;
 
-import communication.ClientConnection;
+import com.github.bernardodemarco.textretrieval.communication.ClientConnection;
 
 public class Client {
     private final ClientConnection connection;
@@ -26,7 +26,7 @@ public class Client {
     private List<String> readQueries() {
         List<String> queries = new ArrayList<>();
 
-        File queriesFile = new File("src/client/queries.txt");
+        File queriesFile = new File("src/main/java/com/github/bernardodemarco/textretrieval/client/queries.txt");
 
         try (BufferedReader reader = new BufferedReader(new FileReader(queriesFile))) {
             String query;
