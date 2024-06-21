@@ -1,6 +1,0 @@
-com/github/bernardodemarco/textretrieval/client/Client.class
-com/github/bernardodemarco/textretrieval/communication/ClientConnection.class
-com/github/bernardodemarco/textretrieval/communication/ScatterGatherService.class
-com/github/bernardodemarco/textretrieval/worker/Worker.class
-com/github/bernardodemarco/textretrieval/communication/Server.class
-com/github/bernardodemarco/textretrieval/root/Root.class
