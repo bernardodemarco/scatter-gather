@@ -32,8 +32,8 @@ public class Worker {
     }
 
     public List<KeywordOccurrencesDTO> findOccurrences(String keyword) {
-        return textFiles.
-                stream()
+        return textFiles
+                .stream()
                 .map((file -> {
                     long occurrences = findOccurrences(keyword, file);
                     return new KeywordOccurrencesDTO(file.getName(), occurrences);
@@ -43,9 +43,8 @@ public class Worker {
     }
 
     private long findOccurrences(String keyword, File file) {
-        long count = 0;
-
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            long count = 0;
             String line;
 
             while ((line = reader.readLine()) != null) {
@@ -55,17 +54,17 @@ public class Worker {
 
                 count += occurrencesInLine;
             }
-        } catch (Exception e) {
-            System.out.println("An error occurred while reading the queries file.");
-            System.out.println(e.getMessage());
-        }
 
-        return count;
+            return count;
+        } catch (Exception e) {
+            String errorMessage = "An error occurred while reading the queries file";
+            throw new RuntimeException(errorMessage, e);
+        }
     }
 
     public void sendOccurrencesResponse(List<KeywordOccurrencesDTO> occurrences) {
         String response = gson.toJson(occurrences);
-        this.server.send(response);
+        server.send(response);
     }
 
     public String parseKeyword(String keywordJSON) {
