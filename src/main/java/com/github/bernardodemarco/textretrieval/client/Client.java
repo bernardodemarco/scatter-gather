@@ -14,13 +14,16 @@ import java.util.ArrayList;
 
 import com.github.bernardodemarco.textretrieval.client.dto.QueryDTO;
 import com.github.bernardodemarco.textretrieval.communication.ClientConnection;
+import com.github.bernardodemarco.textretrieval.root.dto.QueryOccurrencesDTO;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 
 public class Client {
     private final ClientConnection connection;
     private final List<String> queries;
     private final Gson gson = new Gson();
+    private final Gson gsonFormatter = new GsonBuilder().setPrettyPrinting().create();
 
     public Client() {
         this.queries = readQueries();
@@ -53,7 +56,8 @@ public class Client {
     }
 
     private void displayResponse(String response) {
-        System.out.println(response);
+        String formattedJSONOutput = gsonFormatter.toJson(gsonFormatter.fromJson(response, QueryOccurrencesDTO[].class));
+        System.out.println(formattedJSONOutput);
     }
 
     private void sleep() {

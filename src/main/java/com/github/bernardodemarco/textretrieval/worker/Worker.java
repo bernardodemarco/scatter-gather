@@ -7,16 +7,18 @@ import java.io.BufferedReader;
 import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import com.github.bernardodemarco.textretrieval.communication.Server;
+import com.github.bernardodemarco.textretrieval.root.dto.KeywordDTO;
+import com.github.bernardodemarco.textretrieval.worker.dto.KeywordOccurrencesDTO;
 import com.google.gson.Gson;
 
 public class Worker {
     private final Server server = new Server();
     private final List<File> textFiles = initTextFiles();
+    private final Gson gson = new Gson();
 
     public List<File> initTextFiles() {
         String textFilesDirectoryPath = "src/main/java/com/github/bernardodemarco/textretrieval/textfiles";
@@ -29,14 +31,14 @@ public class Worker {
         return files;
     }
 
-    public Map<String, Long> findOccurrences(String keyword) {
-        Map<String, Long> occurrences = new HashMap<>();
-        for (File file : textFiles) {
-            long numberOfOccurrences = findOccurrences(keyword, file);
-            occurrences.put(file.getName(), numberOfOccurrences);
-        }
-
-        return occurrences;
+    public List<KeywordOccurrencesDTO> findOccurrences(String keyword) {
+        return textFiles.
+                stream()
+                .map((file -> {
+                    long occurrences = findOccurrences(keyword, file);
+                    return new KeywordOccurrencesDTO(file.getName(), occurrences);
+                }))
+                .collect(Collectors.toList());
     }
 
     private long findOccurrences(String keyword, File file) {
@@ -60,12 +62,14 @@ public class Worker {
         return count;
     }
 
-    public void sendOccurrences(Map<String, Long> occurrences) {
-        String output = occurrences.entrySet().stream()
-                .map(entry -> String.format("%s %s", entry.getKey(), entry.getValue()))
-                .collect(Collectors.joining(";"));
+    public void sendOccurrencesResponse(List<KeywordOccurrencesDTO> occurrences) {
+        String response = gson.toJson(occurrences);
+        System.out.println("SENDING BACK JSON RESPONSE = " + response);
+        this.server.send(response);
+    }
 
-        this.server.send(output);
+    public String parseKeyword(String keywordJSON) {
+        return gson.fromJson(keywordJSON, KeywordDTO.class).getKeyword();
     }
 
     public Server getServer() {
@@ -85,8 +89,9 @@ public class Worker {
 
         String keyword;
         while ((keyword = worker.getServer().receive()) != null) {
-            Map<String, Long> occurrences = worker.findOccurrences(keyword);
-            worker.sendOccurrences(occurrences);
+            String parsedKeyword = worker.parseKeyword(keyword);
+            List<KeywordOccurrencesDTO> occurrences = worker.findOccurrences(parsedKeyword);
+            worker.sendOccurrencesResponse(occurrences);
         }
 
         worker.getServer().stop();
