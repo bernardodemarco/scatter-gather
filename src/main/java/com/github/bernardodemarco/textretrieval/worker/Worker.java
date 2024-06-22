@@ -1,18 +1,18 @@
 package com.github.bernardodemarco.textretrieval.worker;
 
+import com.github.bernardodemarco.textretrieval.communication.Server;
+import com.github.bernardodemarco.textretrieval.root.dto.KeywordDTO;
+import com.github.bernardodemarco.textretrieval.worker.dto.KeywordOccurrencesDTO;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.BufferedReader;
 
-import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-import com.github.bernardodemarco.textretrieval.communication.Server;
-import com.github.bernardodemarco.textretrieval.root.dto.KeywordDTO;
-import com.github.bernardodemarco.textretrieval.worker.dto.KeywordOccurrencesDTO;
 import com.google.gson.Gson;
 
 public class Worker {
@@ -38,6 +38,7 @@ public class Worker {
                     long occurrences = findOccurrences(keyword, file);
                     return new KeywordOccurrencesDTO(file.getName(), occurrences);
                 }))
+                .filter(keywordOccurrencesDTO -> keywordOccurrencesDTO.getOccurrences() > 0)
                 .collect(Collectors.toList());
     }
 
@@ -64,7 +65,6 @@ public class Worker {
 
     public void sendOccurrencesResponse(List<KeywordOccurrencesDTO> occurrences) {
         String response = gson.toJson(occurrences);
-        System.out.println("SENDING BACK JSON RESPONSE = " + response);
         this.server.send(response);
     }
 
@@ -83,7 +83,6 @@ public class Worker {
         }
 
         int port = Integer.parseInt(args[0]);
-        System.out.println("Port in JSON =" + new Gson().toJson(port));
         Worker worker = new Worker();
         worker.getServer().listen(port);
 

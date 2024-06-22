@@ -1,20 +1,17 @@
 package com.github.bernardodemarco.textretrieval.client;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-
-import java.nio.file.Paths;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
-
 import com.github.bernardodemarco.textretrieval.client.dto.QueryDTO;
 import com.github.bernardodemarco.textretrieval.communication.ClientConnection;
 import com.github.bernardodemarco.textretrieval.root.dto.QueryOccurrencesDTO;
+
+import java.io.FileReader;
+import java.io.IOException;
+
+import java.nio.file.Paths;
+
+import java.util.List;
+import java.util.Arrays;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
