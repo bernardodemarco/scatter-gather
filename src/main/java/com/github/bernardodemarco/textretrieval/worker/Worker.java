@@ -26,7 +26,7 @@ public class Worker {
     private final Gson gson = new Gson();
 
     public List<File> initTextFiles() {
-        String textFilesDirectoryPath = "src/main/java/com/github/bernardodemarco/textretrieval/textfiles";
+        String textFilesDirectoryPath = "src/main/resources/textfiles";
         int numberOfFiles = 5;
         List<File> files = new ArrayList<>();
         for (int i = 0; i < numberOfFiles; i++) {

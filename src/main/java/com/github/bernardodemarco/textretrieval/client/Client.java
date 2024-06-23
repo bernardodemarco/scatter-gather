@@ -5,6 +5,7 @@ import com.github.bernardodemarco.textretrieval.communication.client.ClientConne
 import com.github.bernardodemarco.textretrieval.communication.client.TCPClientConnection;
 import com.github.bernardodemarco.textretrieval.root.dto.QueryOccurrencesDTO;
 
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -12,6 +13,8 @@ import java.nio.file.Paths;
 
 import java.util.List;
 import java.util.Arrays;
+import java.util.Properties;
+
 import org.apache.logging.log4j.LogManager;
 
 import com.google.gson.Gson;
@@ -30,13 +33,14 @@ public class Client {
 
     public Client() {
         this.queries = readQueries();
-        connection = new TCPClientConnection("127.0.0.1", 8000);
+        Properties properties = readProperties();
+        connection = new TCPClientConnection(properties.getProperty("root.server.ip"), Integer.parseInt(properties.getProperty("root.server.port")));
         logger.debug("Connecting to ROOT server.");
         connection.connect();
     }
 
     private List<String> readQueries() {
-        String queriesFilePath = "src/main/java/com/github/bernardodemarco/textretrieval/client/queries.json";
+        String queriesFilePath = "src/main/resources/client/queries.json";
         logger.debug("Reading queries file at [{}].", queriesFilePath);
 
         try (JsonReader fileReader = new JsonReader(new FileReader(queriesFilePath))) {
@@ -71,11 +75,26 @@ public class Client {
     private void sleep() {
         int sleepTime = (int) (Math.random() * (2000 - 1000 + 1)) + 1000;
         try {
-            logger.debug("Sleeping for {} seconds.", sleepTime);
+            logger.debug("Sleeping for {} milliseconds.", sleepTime);
             Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
             logger.error("Interrupted while waiting to send queries.", e);
         }
+    }
+
+    private Properties readProperties() {
+        String propertiesFile = "src/main/resources/client/client.properties";
+        logger.debug("Reading properties file at [{}].", propertiesFile);
+
+        Properties properties = new Properties();
+        try (FileInputStream in = new FileInputStream("src/main/resources/client/client.properties")) {
+            properties.load(in);
+        } catch (Exception e) {
+            logger.error("Error reading properties file at [{}].", propertiesFile, e);
+            throw new RuntimeException(e);
+        }
+
+        return properties;
     }
 
     public void run() {

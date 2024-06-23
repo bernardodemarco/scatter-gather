@@ -101,7 +101,7 @@ public class Root {
 
     private Map<String, List<String>> getFileContents() {
         Map<String, List<String>> fileContents = new HashMap<>();
-        String textFilesDirectoryPath = "src/main/java/com/github/bernardodemarco/textretrieval/textfiles";
+        String textFilesDirectoryPath = "src/main/resources/textfiles";
         int numberOfFiles = 5;
         for (int i = 0; i < numberOfFiles; i++) {
             String fileName = String.format("text%s.txt", i + 1);
