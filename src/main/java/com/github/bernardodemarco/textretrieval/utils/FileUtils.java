@@ -2,17 +2,19 @@ package com.github.bernardodemarco.textretrieval.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
+import java.lang.reflect.Type;
+
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Type;
+import java.io.FileInputStream;
+
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
+
 import java.util.List;
 import java.util.Properties;
 
@@ -27,9 +29,8 @@ public class FileUtils {
         try (JsonReader fileReader = new JsonReader(new FileReader(resourcesFolderPath + fileRelativePath))) {
             return gson.fromJson(fileReader, typeOfT);
         } catch (IOException e) {
-            String errorMessage = String.format("File [%s] not found.", resourcesFolderPath + fileRelativePath);
-            logger.error(errorMessage, e);
-            throw new RuntimeException(errorMessage, e);
+            logger.error("File [{}] not found.", resourcesFolderPath + fileRelativePath, e);
+            throw new RuntimeException(e);
         }
     }
 
