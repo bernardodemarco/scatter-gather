@@ -2,6 +2,7 @@ package com.github.bernardodemarco.textretrieval.client;
 
 import com.github.bernardodemarco.textretrieval.client.dto.QueryDTO;
 import com.github.bernardodemarco.textretrieval.communication.client.ClientConnection;
+import com.github.bernardodemarco.textretrieval.communication.client.TCPClientConnection;
 import com.github.bernardodemarco.textretrieval.root.dto.QueryOccurrencesDTO;
 
 import java.io.FileReader;
@@ -29,7 +30,7 @@ public class Client {
 
     public Client() {
         this.queries = readQueries();
-        connection = new ClientConnection("127.0.0.1", 8000);
+        connection = new TCPClientConnection("127.0.0.1", 8000);
         logger.debug("Connecting to ROOT server.");
         connection.connect();
     }

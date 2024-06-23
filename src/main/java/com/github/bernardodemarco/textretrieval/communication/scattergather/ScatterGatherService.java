@@ -1,6 +1,7 @@
 package com.github.bernardodemarco.textretrieval.communication.scattergather;
 
 import com.github.bernardodemarco.textretrieval.communication.client.ClientConnection;
+import com.github.bernardodemarco.textretrieval.communication.client.TCPClientConnection;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,7 +29,7 @@ public class ScatterGatherService implements ScatterGather {
         List<ClientConnection> connections = new ArrayList<>();
 
         ports.forEach(port -> {
-            ClientConnection connection = new ClientConnection("127.0.0.1", port);
+            ClientConnection connection = new TCPClientConnection("127.0.0.1", port);
             connection.connect();
             logger.info("Successfully connected to WORKER [{}:{}]", "127.0.0.1", port);
             connections.add(connection);
