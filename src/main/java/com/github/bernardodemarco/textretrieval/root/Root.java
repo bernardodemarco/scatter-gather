@@ -10,6 +10,12 @@ import com.github.bernardodemarco.textretrieval.worker.dto.KeywordOccurrencesDTO
 import com.github.bernardodemarco.textretrieval.communication.server.TCPServer;
 import com.github.bernardodemarco.textretrieval.communication.scattergather.ScatterGatherService;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.List;
@@ -29,6 +35,12 @@ public class Root {
 
     private final Server server = new TCPServer();
     private final ScatterGather scatterGather = new ScatterGatherService(Arrays.asList(8001, 8002));
+
+    private final Map<String, List<String>> fileContents;
+
+    public Root() {
+        this.fileContents = getFileContents();
+    }
 
     public Set<String> parseQuery(String query) {
         String parsedQuery = gson.fromJson(query, QueryDTO.class).getQuery();
@@ -75,15 +87,35 @@ public class Root {
 
         List<QueryOccurrencesDTO> clientResponse = new ArrayList<>();
         for (Map.Entry<String, List<KeywordOccurrencesDTO>> entry : occurrencesGroupedByText.entrySet()) {
-            long occurrencesInFile = occurrencesGroupedByText.get(entry.getKey())
+            String fileName = entry.getKey();
+            long occurrencesInFile = occurrencesGroupedByText.get(fileName)
                     .stream()
                     .mapToLong(KeywordOccurrencesDTO::getOccurrences)
                     .sum();
 
-            clientResponse.add(new QueryOccurrencesDTO(entry.getKey(), occurrencesInFile));
+            clientResponse.add(new QueryOccurrencesDTO(fileName, fileContents.get(fileName), occurrencesInFile));
         }
         
         return clientResponse;
+    }
+
+    private Map<String, List<String>> getFileContents() {
+        Map<String, List<String>> fileContents = new HashMap<>();
+        String textFilesDirectoryPath = "src/main/java/com/github/bernardodemarco/textretrieval/textfiles";
+        int numberOfFiles = 5;
+        for (int i = 0; i < numberOfFiles; i++) {
+            String fileName = String.format("text%s.txt", i + 1);
+            String absoluteFileName = String.format("%s/%s", textFilesDirectoryPath, fileName);
+            try {
+                List<String> content = Files.readAllLines(Paths.get(absoluteFileName));
+                fileContents.put(fileName, content);
+            } catch (IOException e) {
+                logger.error("An error occurred while reading the file [{}].", absoluteFileName, e);
+                throw new RuntimeException(e);
+            }
+        }
+
+        return fileContents;
     }
 
     public Server getServer() {
