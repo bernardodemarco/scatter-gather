@@ -25,6 +25,10 @@ public class Worker {
     private final List<File> textFiles = initTextFiles();
     private final Gson gson = new Gson();
 
+    public Worker(int port) {
+        this.server.listen(port);
+    }
+
     public List<File> initTextFiles() {
         String textFilesDirectoryPath = "src/main/resources/textfiles";
         int numberOfFiles = 5;
@@ -90,20 +94,5 @@ public class Worker {
 
     public Server getServer() {
         return server;
-    }
-
-    public static void main(String[] args) {
-        if (args.length != 1) {
-            System.out.println("A port number is required.");
-            System.exit(1);
-        }
-
-        int port = Integer.parseInt(args[0]);
-        Worker worker = new Worker();
-        worker.getServer().listen(port);
-
-        worker.handleRequests();
-
-        worker.getServer().stop();
     }
 }
