@@ -2,6 +2,7 @@ package com.github.bernardodemarco.textretrieval.worker;
 
 import com.github.bernardodemarco.textretrieval.communication.server.Server;
 import com.github.bernardodemarco.textretrieval.communication.server.TCPServer;
+
 import com.github.bernardodemarco.textretrieval.root.dto.KeywordDTO;
 import com.github.bernardodemarco.textretrieval.worker.dto.KeywordOccurrencesDTO;
 
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,13 +25,14 @@ public class Worker {
 
     private final Server server = new TCPServer();
     private final List<File> textFiles = initTextFiles();
+    
     private final Gson gson = new Gson();
 
     public Worker(int port) {
         this.server.listen(port);
     }
 
-    public List<File> initTextFiles() {
+    private List<File> initTextFiles() {
         String textFilesDirectoryPath = "src/main/resources/textfiles";
         int numberOfFiles = 5;
         List<File> files = new ArrayList<>();
@@ -73,12 +76,7 @@ public class Worker {
         }
     }
 
-    public void sendOccurrencesResponse(List<KeywordOccurrencesDTO> occurrences) {
-        String response = gson.toJson(occurrences);
-        server.send(response);
-    }
-
-    public String parseKeyword(String keywordJSON) {
+    private String parseKeyword(String keywordJSON) {
         return gson.fromJson(keywordJSON, KeywordDTO.class).getKeyword();
     }
 
@@ -88,7 +86,7 @@ public class Worker {
             logger.info("Received keyword [{}].", keyword);
             String parsedKeyword = parseKeyword(keyword);
             List<KeywordOccurrencesDTO> occurrences = findOccurrences(parsedKeyword);
-            sendOccurrencesResponse(occurrences);
+            server.send(gson.toJson(occurrences));
         }
 
         server.stop();
