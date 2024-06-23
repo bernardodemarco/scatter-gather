@@ -11,21 +11,26 @@ import java.nio.file.Paths;
 
 import java.util.List;
 import java.util.Arrays;
+import org.apache.logging.log4j.LogManager;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.internal.LogManagerStatus;
 
 public class Client {
     private final ClientConnection connection;
     private final List<String> queries;
     private final Gson gson = new Gson();
     private final Gson gsonFormatter = new GsonBuilder().setPrettyPrinting().create();
+    private final Logger logger = LogManager.getLogger(Client.class);
 
     public Client() {
         this.queries = readQueries();
         connection = new ClientConnection("127.0.0.1", 8000);
         connection.connect();
+        logger.info("Successfully connected to ROOT server [{}:{}]", "127.0.0.1", 8000);
     }
 
     private List<String> readQueries() {
@@ -48,7 +53,6 @@ public class Client {
 
     private void sendQuery(String query) {
         String payload = gson.toJson(new QueryDTO(query));
-        System.out.println("PAYLOAD = " + payload);
         connection.send(payload);
     }
 

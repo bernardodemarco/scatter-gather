@@ -14,11 +14,14 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class Worker {
     private final Server server = new Server();
     private final List<File> textFiles = initTextFiles();
     private final Gson gson = new Gson();
+    private final Logger logger = LogManager.getLogger(getClass());
 
     public List<File> initTextFiles() {
         String textFilesDirectoryPath = "src/main/java/com/github/bernardodemarco/textretrieval/textfiles";
@@ -75,6 +78,10 @@ public class Worker {
         return server;
     }
 
+    public Logger getLogger() {
+        return logger;
+    }
+
     public static void main(String[] args) {
         if (args.length != 1) {
             System.out.println("A port number is required.");
@@ -84,6 +91,7 @@ public class Worker {
         int port = Integer.parseInt(args[0]);
         Worker worker = new Worker();
         worker.getServer().listen(port);
+        worker.getLogger().debug("WORKER server listening on [{}:{}]", "127.0.0.1", port);
 
         String keyword;
         while ((keyword = worker.getServer().receive()) != null) {

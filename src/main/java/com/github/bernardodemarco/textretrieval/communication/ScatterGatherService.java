@@ -1,5 +1,8 @@
 package com.github.bernardodemarco.textretrieval.communication;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,6 +15,7 @@ public class ScatterGatherService {
     private final List<ClientConnection> connections;
     private final ExecutorService threadPool;
     private final List<Future<String>> futures = new ArrayList<>();
+    private final Logger logger = LogManager.getLogger(getClass());
 
     public ScatterGatherService(List<Integer> ports) {
         connections = openConnections(ports);
@@ -24,6 +28,7 @@ public class ScatterGatherService {
         ports.forEach(port -> {
             ClientConnection connection = new ClientConnection("127.0.0.1", port);
             connection.connect();
+            logger.info("Successfully connected to WORKER [{}:{}]", "127.0.0.1", port);
             connections.add(connection);
         });
 

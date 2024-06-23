@@ -17,11 +17,14 @@ import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class Root {
     private final Server server = new Server();
     private final ScatterGatherService scatterGather = new ScatterGatherService(Arrays.asList(8001, 8002));
     private final Gson gson = new Gson();
+    private final Logger logger = LogManager.getLogger(getClass());
 
     public Set<String> parseQuery(String query) {
         String parsedQuery = gson.fromJson(query, QueryDTO.class).getQuery();
@@ -33,6 +36,7 @@ public class Root {
 
     public void handleRequests() {
         String query = server.receive();
+        logger.debug("Received query [{}] from client.", query);
         while (query != null && !query.equalsIgnoreCase("end")) {
             Set<String> keywords = parseQuery(query);
             scatterGather.scatter(keywords);
@@ -79,6 +83,10 @@ public class Root {
         return server;
     }
 
+    public Logger getLogger() {
+        return logger;
+    }
+
     public ScatterGatherService getScatterGather() {
         return scatterGather;
     }
@@ -86,6 +94,7 @@ public class Root {
     public static void main(String[] args) {
         Root root = new Root();
         root.getServer().listen(8000);
+        root.getLogger().debug("ROOT server listening on [{}:{}]", "127.0.0.1", 8000);
 
         root.handleRequests();
 
