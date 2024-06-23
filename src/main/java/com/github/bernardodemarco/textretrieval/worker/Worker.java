@@ -25,7 +25,7 @@ public class Worker {
 
     private final Server server = new TCPServer();
     private final List<File> textFiles = initTextFiles();
-    
+
     private final Gson gson = new Gson();
 
     public Worker(int port) {
