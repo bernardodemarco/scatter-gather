@@ -1,7 +1,7 @@
 package com.github.bernardodemarco.textretrieval.client;
 
 import com.github.bernardodemarco.textretrieval.client.dto.QueryDTO;
-import com.github.bernardodemarco.textretrieval.communication.ClientConnection;
+import com.github.bernardodemarco.textretrieval.communication.client.ClientConnection;
 import com.github.bernardodemarco.textretrieval.root.dto.QueryOccurrencesDTO;
 
 import java.io.FileReader;

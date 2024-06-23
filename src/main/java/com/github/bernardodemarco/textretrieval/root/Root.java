@@ -1,12 +1,14 @@
 package com.github.bernardodemarco.textretrieval.root;
 
 import com.github.bernardodemarco.textretrieval.client.dto.QueryDTO;
+import com.github.bernardodemarco.textretrieval.communication.scattergather.ScatterGather;
+import com.github.bernardodemarco.textretrieval.communication.server.Server;
 import com.github.bernardodemarco.textretrieval.root.dto.KeywordDTO;
 import com.github.bernardodemarco.textretrieval.root.dto.QueryOccurrencesDTO;
 import com.github.bernardodemarco.textretrieval.worker.dto.KeywordOccurrencesDTO;
 
-import com.github.bernardodemarco.textretrieval.communication.Server;
-import com.github.bernardodemarco.textretrieval.communication.ScatterGatherService;
+import com.github.bernardodemarco.textretrieval.communication.server.TCPServer;
+import com.github.bernardodemarco.textretrieval.communication.scattergather.ScatterGatherService;
 
 import java.util.Map;
 import java.util.Set;
@@ -21,10 +23,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class Root {
-    private final Server server = new Server();
-    private final ScatterGatherService scatterGather = new ScatterGatherService(Arrays.asList(8001, 8002));
-    private final Gson gson = new Gson();
     private final Logger logger = LogManager.getLogger(getClass());
+
+    private final Gson gson = new Gson();
+
+    private final Server server = new TCPServer();
+    private final ScatterGather scatterGather = new ScatterGatherService(Arrays.asList(8001, 8002));
 
     public Set<String> parseQuery(String query) {
         String parsedQuery = gson.fromJson(query, QueryDTO.class).getQuery();
@@ -36,12 +40,13 @@ public class Root {
 
     public void handleRequests() {
         String query = server.receive();
-        logger.debug("Received query [{}] from client.", query);
+        logger.info("Received query [{}] from client.", query);
         while (query != null && !query.equalsIgnoreCase("end")) {
             Set<String> keywords = parseQuery(query);
             scatterGather.scatter(keywords);
 
             List<String> workersResponses = scatterGather.gather();
+            logger.debug("Received [{}] from workers.", workersResponses);
             server.send(generateClientResponse(workersResponses));
 
             query = server.receive();
@@ -55,6 +60,7 @@ public class Root {
     }
 
     private List<KeywordOccurrencesDTO> parseKeywordsResponses(List<String> keywordsResponses) {
+        logger.debug("Parsing keywords responses.");
         TypeToken<List<KeywordOccurrencesDTO>> responseType = new TypeToken<List<KeywordOccurrencesDTO>>(){};
         return keywordsResponses.stream()
                 .map((response) -> gson.fromJson(response, responseType))
@@ -63,6 +69,7 @@ public class Root {
     }
 
     private List<QueryOccurrencesDTO> getQueryOccurrences(List<KeywordOccurrencesDTO> keywordsOccurrences) {
+        logger.debug("Calculating query occurrences.");
         Map<String, List<KeywordOccurrencesDTO>> occurrencesGroupedByText = keywordsOccurrences.stream()
                 .collect(Collectors.groupingBy(KeywordOccurrencesDTO::getFileName));
 
@@ -83,22 +90,17 @@ public class Root {
         return server;
     }
 
-    public Logger getLogger() {
-        return logger;
-    }
-
-    public ScatterGatherService getScatterGather() {
+    public ScatterGather getScatterGather() {
         return scatterGather;
     }
 
     public static void main(String[] args) {
         Root root = new Root();
         root.getServer().listen(8000);
-        root.getLogger().debug("ROOT server listening on [{}:{}]", "127.0.0.1", 8000);
 
         root.handleRequests();
 
-        root.getScatterGather().stopService();
+        root.getScatterGather().stop();
         root.getServer().stop();
     }
 }

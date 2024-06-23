@@ -1,6 +1,7 @@
 package com.github.bernardodemarco.textretrieval.worker;
 
-import com.github.bernardodemarco.textretrieval.communication.Server;
+import com.github.bernardodemarco.textretrieval.communication.server.Server;
+import com.github.bernardodemarco.textretrieval.communication.server.TCPServer;
 import com.github.bernardodemarco.textretrieval.root.dto.KeywordDTO;
 import com.github.bernardodemarco.textretrieval.worker.dto.KeywordOccurrencesDTO;
 
@@ -18,10 +19,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class Worker {
-    private final Server server = new Server();
+    private final Logger logger = LogManager.getLogger(getClass());
+
+    private final Server server = new TCPServer();
     private final List<File> textFiles = initTextFiles();
     private final Gson gson = new Gson();
-    private final Logger logger = LogManager.getLogger(getClass());
 
     public List<File> initTextFiles() {
         String textFilesDirectoryPath = "src/main/java/com/github/bernardodemarco/textretrieval/textfiles";
@@ -58,10 +60,12 @@ public class Worker {
                 count += occurrencesInLine;
             }
 
+            logger.debug("Keyword [{}] has appeared [{}] times in [{}]", keyword, count, file.getName());
             return count;
         } catch (Exception e) {
-            String errorMessage = "An error occurred while reading the queries file";
-            throw new RuntimeException(errorMessage, e);
+            String errorMessage = "An error occurred while reading the queries file.";
+            logger.error(errorMessage, e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -74,12 +78,18 @@ public class Worker {
         return gson.fromJson(keywordJSON, KeywordDTO.class).getKeyword();
     }
 
-    public Server getServer() {
-        return server;
+    public void handleRequests() {
+        String keyword;
+        while ((keyword = server.receive()) != null) {
+            logger.info("Received keyword [{}].", keyword);
+            String parsedKeyword = parseKeyword(keyword);
+            List<KeywordOccurrencesDTO> occurrences = findOccurrences(parsedKeyword);
+            sendOccurrencesResponse(occurrences);
+        }
     }
 
-    public Logger getLogger() {
-        return logger;
+    public Server getServer() {
+        return server;
     }
 
     public static void main(String[] args) {
@@ -91,14 +101,8 @@ public class Worker {
         int port = Integer.parseInt(args[0]);
         Worker worker = new Worker();
         worker.getServer().listen(port);
-        worker.getLogger().debug("WORKER server listening on [{}:{}]", "127.0.0.1", port);
 
-        String keyword;
-        while ((keyword = worker.getServer().receive()) != null) {
-            String parsedKeyword = worker.parseKeyword(keyword);
-            List<KeywordOccurrencesDTO> occurrences = worker.findOccurrences(parsedKeyword);
-            worker.sendOccurrencesResponse(occurrences);
-        }
+        worker.handleRequests();
 
         worker.getServer().stop();
     }

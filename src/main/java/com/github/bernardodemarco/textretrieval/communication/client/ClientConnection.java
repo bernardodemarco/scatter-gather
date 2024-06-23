@@ -1,4 +1,4 @@
-package com.github.bernardodemarco.textretrieval.communication;
+package com.github.bernardodemarco.textretrieval.communication.client;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
