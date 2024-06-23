@@ -1,30 +1,32 @@
 package com.github.bernardodemarco.textretrieval.root;
 
-import com.github.bernardodemarco.textretrieval.client.dto.QueryDTO;
-import com.github.bernardodemarco.textretrieval.communication.scattergather.ScatterGather;
 import com.github.bernardodemarco.textretrieval.communication.server.Server;
-import com.github.bernardodemarco.textretrieval.root.dto.KeywordDTO;
-import com.github.bernardodemarco.textretrieval.root.dto.QueryOccurrencesDTO;
-import com.github.bernardodemarco.textretrieval.utils.FileUtils;
-import com.github.bernardodemarco.textretrieval.worker.dto.KeywordOccurrencesDTO;
-
 import com.github.bernardodemarco.textretrieval.communication.server.TCPServer;
+import com.github.bernardodemarco.textretrieval.communication.scattergather.ScatterGather;
 import com.github.bernardodemarco.textretrieval.communication.scattergather.ScatterGatherService;
 
-import java.util.AbstractMap;
-import java.util.HashMap;
+import com.github.bernardodemarco.textretrieval.client.dto.QueryDTO;
+import com.github.bernardodemarco.textretrieval.root.dto.KeywordDTO;
+import com.github.bernardodemarco.textretrieval.root.dto.QueryOccurrencesDTO;
+import com.github.bernardodemarco.textretrieval.worker.dto.KeywordOccurrencesDTO;
+
+import com.github.bernardodemarco.textretrieval.utils.FileUtils;
+
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.List;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Properties;
+import java.util.AbstractMap;
 import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.apache.logging.log4j.LogManager;
+
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class Root {
     private final Logger logger = LogManager.getLogger(getClass());
@@ -46,10 +48,7 @@ public class Root {
     private List<Map.Entry<String, Integer>> getWorkersAddresses(Properties properties) {
         List<Map.Entry<String, Integer>> addresses = new ArrayList<>();
         int numberOfWorkers = Integer.parseInt(properties.getProperty("workers.count"));
-        logger.error(numberOfWorkers);
         for (int i = 0; i < numberOfWorkers; i++) {
-            String propertyName = String.format("worker.%s.server.ip", i + 1);
-            logger.error(propertyName);
             String ip = properties.getProperty(String.format("worker.%s.server.ip", i + 1));
             Integer port = Integer.parseInt(properties.getProperty(String.format("worker.%s.server.port", i + 1)));
             addresses.add(new AbstractMap.SimpleImmutableEntry<>(ip, port));
@@ -58,12 +57,16 @@ public class Root {
         return addresses;
     }
 
-    public Set<String> parseQuery(String query) {
-        String parsedQuery = gson.fromJson(query, QueryDTO.class).getQuery();
-        return Arrays.stream(parsedQuery.split("\\s"))
-                .map(KeywordDTO::new)
-                .map(gson::toJson)
-                .collect(Collectors.toSet());
+    private Map<String, List<String>> getFileContents() {
+        Map<String, List<String>> fileContents = new HashMap<>();
+        int numberOfFiles = 5;
+        for (int i = 0; i < numberOfFiles; i++) {
+            String fileName = String.format("text%s.txt", i + 1);
+            List<String> content = FileUtils.readTextFile("/textfiles/" + fileName);
+            fileContents.put(fileName, content);
+        }
+
+        return fileContents;
     }
 
     public void handleRequests() {
@@ -80,6 +83,14 @@ public class Root {
 
         scatterGather.stop();
         server.stop();
+    }
+
+    private Set<String> parseQuery(String query) {
+        String parsedQuery = gson.fromJson(query, QueryDTO.class).getQuery();
+        return Arrays.stream(parsedQuery.split("\\s"))
+                .map(KeywordDTO::new)
+                .map(gson::toJson)
+                .collect(Collectors.toSet());
     }
 
     private String generateClientResponse(List<String> workersResponses) {
@@ -114,18 +125,6 @@ public class Root {
         }
         
         return clientResponse;
-    }
-
-    private Map<String, List<String>> getFileContents() {
-        Map<String, List<String>> fileContents = new HashMap<>();
-        int numberOfFiles = 5;
-        for (int i = 0; i < numberOfFiles; i++) {
-            String fileName = String.format("text%s.txt", i + 1);
-            List<String> content = FileUtils.readTextFile("/textfiles/" + fileName);
-            fileContents.put(fileName, content);
-        }
-
-        return fileContents;
     }
 
     public static void main(String[] args) {
