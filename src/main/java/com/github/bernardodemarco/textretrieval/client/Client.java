@@ -1,24 +1,25 @@
 package com.github.bernardodemarco.textretrieval.client;
 
+import com.github.bernardodemarco.textretrieval.utils.FileUtils;
+
 import com.github.bernardodemarco.textretrieval.client.dto.QueryDTO;
-import com.github.bernardodemarco.textretrieval.communication.client.ClientConnection;
-import com.github.bernardodemarco.textretrieval.communication.client.TCPClientConnection;
 import com.github.bernardodemarco.textretrieval.root.dto.QueryOccurrencesDTO;
 
+import com.github.bernardodemarco.textretrieval.communication.client.ClientConnection;
+import com.github.bernardodemarco.textretrieval.communication.client.TCPClientConnection;
 
 import java.util.List;
 import java.util.Arrays;
 import java.util.Properties;
 
-import com.github.bernardodemarco.textretrieval.utils.FileUtils;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.logging.log4j.Logger;
 
 public class Client {
-    private final Logger logger = LogManager.getLogger(Client.class);
+    private final Logger logger = LogManager.getLogger(getClass());
 
     private final Gson gson = new Gson();
     private final Gson gsonFormatter = new GsonBuilder().setPrettyPrinting().create();
