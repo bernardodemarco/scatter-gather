@@ -10,8 +10,6 @@ public class Worker2 {
         Properties properties = FileUtils.readPropertiesFile("/workers/worker2.properties");
         int port = Integer.parseInt(properties.getProperty("worker.server.port"));
 
-        Worker worker = new Worker(port);
-        worker.handleRequests();
-        worker.getServer().stop();
+        new Worker(port).handleRequests();
     }
 }

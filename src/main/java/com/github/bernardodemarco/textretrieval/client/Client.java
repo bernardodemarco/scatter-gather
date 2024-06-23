@@ -5,11 +5,6 @@ import com.github.bernardodemarco.textretrieval.communication.client.ClientConne
 import com.github.bernardodemarco.textretrieval.communication.client.TCPClientConnection;
 import com.github.bernardodemarco.textretrieval.root.dto.QueryOccurrencesDTO;
 
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
-
-import java.nio.file.Paths;
 
 import java.util.List;
 import java.util.Arrays;
@@ -20,7 +15,6 @@ import org.apache.logging.log4j.LogManager;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.stream.JsonReader;
 import org.apache.logging.log4j.Logger;
 
 public class Client {
@@ -40,23 +34,6 @@ public class Client {
 
         logger.debug("Connecting to ROOT server.");
         connection.connect();
-    }
-
-    private List<String> readQueries() {
-        String queriesFilePath = "src/main/resources/client/queries.json";
-        logger.debug("Reading queries file at [{}].", queriesFilePath);
-
-        try (JsonReader fileReader = new JsonReader(new FileReader(queriesFilePath))) {
-            return Arrays.asList(gson.fromJson(fileReader, String[].class));
-        } catch (IOException e) {
-            String errorMessage = String.format(
-                    "Queries file not found [%s], current path [%s]",
-                    queriesFilePath, Paths.get(".").toAbsolutePath().normalize()
-            );
-
-            logger.error(errorMessage, e);
-            throw new RuntimeException(errorMessage, e);
-        }
     }
 
     private String getResponse() {
@@ -92,16 +69,11 @@ public class Client {
             displayResponse(response);
             sleep();
         });
-    }
 
-    public void closeServerConnection() {
-        connection.send("end");
         connection.stop();
     }
 
     public static void main(String[] args) {
-        Client client = new Client();
-        client.run();
-        client.closeServerConnection();
+        new Client().run();
     }
 }

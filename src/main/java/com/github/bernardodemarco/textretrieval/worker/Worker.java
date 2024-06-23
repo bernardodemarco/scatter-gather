@@ -90,9 +90,7 @@ public class Worker {
             List<KeywordOccurrencesDTO> occurrences = findOccurrences(parsedKeyword);
             sendOccurrencesResponse(occurrences);
         }
-    }
 
-    public Server getServer() {
-        return server;
+        server.stop();
     }
 }

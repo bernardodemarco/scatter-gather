@@ -11,11 +11,6 @@ import com.github.bernardodemarco.textretrieval.worker.dto.KeywordOccurrencesDTO
 import com.github.bernardodemarco.textretrieval.communication.server.TCPServer;
 import com.github.bernardodemarco.textretrieval.communication.scattergather.ScatterGatherService;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -72,18 +67,19 @@ public class Root {
     }
 
     public void handleRequests() {
-        String query = server.receive();
-        logger.info("Received query [{}] from client.", query);
-        while (query != null && !query.equalsIgnoreCase("end")) {
+        String query;
+        while ((query = server.receive()) != null) {
+            logger.info("Received query [{}] from client.", query);
             Set<String> keywords = parseQuery(query);
             scatterGather.scatter(keywords);
 
             List<String> workersResponses = scatterGather.gather();
             logger.debug("Received [{}] from workers.", workersResponses);
             server.send(generateClientResponse(workersResponses));
-
-            query = server.receive();
         }
+
+        scatterGather.stop();
+        server.stop();
     }
 
     private String generateClientResponse(List<String> workersResponses) {
@@ -132,20 +128,7 @@ public class Root {
         return fileContents;
     }
 
-    public Server getServer() {
-        return server;
-    }
-
-    public ScatterGather getScatterGather() {
-        return scatterGather;
-    }
-
     public static void main(String[] args) {
-        Root root = new Root();
-
-        root.handleRequests();
-
-        root.getScatterGather().stop();
-        root.getServer().stop();
+        new Root().handleRequests();
     }
 }
