@@ -1,5 +1,8 @@
 package com.github.bernardodemarco.textretrieval.communication;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.PrintWriter;
 import java.io.IOException;
 import java.io.BufferedReader;
@@ -9,6 +12,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 public class ClientConnection {
+    private final Logger logger = LogManager.getLogger(getClass());
+
     private final String hostAddress;
     private final int port;
 
@@ -26,11 +31,12 @@ public class ClientConnection {
             socket = new Socket(hostAddress, port);
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            logger.info("Successfully connected to server [{}:{}].", hostAddress, port);
         } catch (UnknownHostException e) {
-            System.out.printf("Unknown host: %s%n", hostAddress);
+            logger.error("Unknown host [{}:{}].", hostAddress, port, e);
             System.exit(1);
         } catch (IOException e) {
-            System.out.printf("Exception while getting %s connection input/output%n", hostAddress);
+            logger.error("Exception while getting [{}:{}] connection input/output.", hostAddress, port, e);
             System.exit(1);
         }
     }
@@ -41,8 +47,7 @@ public class ClientConnection {
             out.close();
             socket.close();
         } catch (IOException e) {
-            System.out.println("Exception while closing the socket and its streams.");
-            System.out.println(e.getMessage());
+            logger.error("Exception while closing the socket and its streams.", e);
             System.exit(1);
         }
     }
@@ -59,10 +64,5 @@ public class ClientConnection {
         } catch (IOException e) {
             return null;
         }
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Connection[%s:%d]", hostAddress, port);
     }
 }
