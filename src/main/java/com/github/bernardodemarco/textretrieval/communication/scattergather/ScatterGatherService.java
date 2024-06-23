@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
@@ -20,18 +21,20 @@ public class ScatterGatherService implements ScatterGather {
     private final ExecutorService threadPool;
     private final List<Future<String>> futures = new ArrayList<>();
 
-    public ScatterGatherService(List<Integer> ports) {
-        connections = openConnections(ports);
+    public ScatterGatherService(List<Map.Entry<String, Integer>> addresses) {
+        connections = openConnections(addresses);
         threadPool = Executors.newFixedThreadPool(connections.size());
     }
 
-    private List<ClientConnection> openConnections(List<Integer> ports) {
+    private List<ClientConnection> openConnections(List<Map.Entry<String, Integer>> addresses) {
         List<ClientConnection> connections = new ArrayList<>();
 
-        ports.forEach(port -> {
-            ClientConnection connection = new TCPClientConnection("127.0.0.1", port);
+        addresses.forEach((address) -> {
+            String ip = address.getKey();
+            int port = address.getValue();
+            ClientConnection connection = new TCPClientConnection(ip, port);
             connection.connect();
-            logger.info("Successfully connected to WORKER [{}:{}]", "127.0.0.1", port);
+            logger.info("Successfully connected to WORKER [{}:{}]", ip, port);
             connections.add(connection);
         });
 

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.Properties;
 
+import com.github.bernardodemarco.textretrieval.utils.FileUtils;
 import org.apache.logging.log4j.LogManager;
 
 import com.google.gson.Gson;
@@ -32,9 +33,11 @@ public class Client {
     private final List<String> queries;
 
     public Client() {
-        this.queries = readQueries();
-        Properties properties = readProperties();
+        this.queries = Arrays.asList(FileUtils.readJSONFile("/client/queries.json", String[].class));
+
+        Properties properties = FileUtils.readPropertiesFile("/client/client.properties");
         connection = new TCPClientConnection(properties.getProperty("root.server.ip"), Integer.parseInt(properties.getProperty("root.server.port")));
+
         logger.debug("Connecting to ROOT server.");
         connection.connect();
     }
@@ -80,21 +83,6 @@ public class Client {
         } catch (InterruptedException e) {
             logger.error("Interrupted while waiting to send queries.", e);
         }
-    }
-
-    private Properties readProperties() {
-        String propertiesFile = "src/main/resources/client/client.properties";
-        logger.debug("Reading properties file at [{}].", propertiesFile);
-
-        Properties properties = new Properties();
-        try (FileInputStream in = new FileInputStream("src/main/resources/client/client.properties")) {
-            properties.load(in);
-        } catch (Exception e) {
-            logger.error("Error reading properties file at [{}].", propertiesFile, e);
-            throw new RuntimeException(e);
-        }
-
-        return properties;
     }
 
     public void run() {

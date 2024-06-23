@@ -5,6 +5,7 @@ import com.github.bernardodemarco.textretrieval.communication.scattergather.Scat
 import com.github.bernardodemarco.textretrieval.communication.server.Server;
 import com.github.bernardodemarco.textretrieval.root.dto.KeywordDTO;
 import com.github.bernardodemarco.textretrieval.root.dto.QueryOccurrencesDTO;
+import com.github.bernardodemarco.textretrieval.utils.FileUtils;
 import com.github.bernardodemarco.textretrieval.worker.dto.KeywordOccurrencesDTO;
 
 import com.github.bernardodemarco.textretrieval.communication.server.TCPServer;
@@ -15,8 +16,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.List;
 import java.util.Arrays;
@@ -34,12 +37,30 @@ public class Root {
     private final Gson gson = new Gson();
 
     private final Server server = new TCPServer();
-    private final ScatterGather scatterGather = new ScatterGatherService(Arrays.asList(8001, 8002));
+    private final ScatterGather scatterGather;
 
     private final Map<String, List<String>> fileContents;
 
     public Root() {
+        Properties properties = FileUtils.readPropertiesFile("/root/root.properties");
+        this.server.listen(Integer.parseInt(properties.getProperty("root.server.port")));
+        this.scatterGather = new ScatterGatherService(this.getWorkersAddresses(properties));
         this.fileContents = getFileContents();
+    }
+
+    private List<Map.Entry<String, Integer>> getWorkersAddresses(Properties properties) {
+        List<Map.Entry<String, Integer>> addresses = new ArrayList<>();
+        int numberOfWorkers = Integer.parseInt(properties.getProperty("workers.count"));
+        logger.error(numberOfWorkers);
+        for (int i = 0; i < numberOfWorkers; i++) {
+            String propertyName = String.format("worker.%s.server.ip", i + 1);
+            logger.error(propertyName);
+            String ip = properties.getProperty(String.format("worker.%s.server.ip", i + 1));
+            Integer port = Integer.parseInt(properties.getProperty(String.format("worker.%s.server.port", i + 1)));
+            addresses.add(new AbstractMap.SimpleImmutableEntry<>(ip, port));
+        }
+
+        return addresses;
     }
 
     public Set<String> parseQuery(String query) {
@@ -101,18 +122,11 @@ public class Root {
 
     private Map<String, List<String>> getFileContents() {
         Map<String, List<String>> fileContents = new HashMap<>();
-        String textFilesDirectoryPath = "src/main/resources/textfiles";
         int numberOfFiles = 5;
         for (int i = 0; i < numberOfFiles; i++) {
             String fileName = String.format("text%s.txt", i + 1);
-            String absoluteFileName = String.format("%s/%s", textFilesDirectoryPath, fileName);
-            try {
-                List<String> content = Files.readAllLines(Paths.get(absoluteFileName));
-                fileContents.put(fileName, content);
-            } catch (IOException e) {
-                logger.error("An error occurred while reading the file [{}].", absoluteFileName, e);
-                throw new RuntimeException(e);
-            }
+            List<String> content = FileUtils.readTextFile("/textfiles/" + fileName);
+            fileContents.put(fileName, content);
         }
 
         return fileContents;
@@ -128,7 +142,6 @@ public class Root {
 
     public static void main(String[] args) {
         Root root = new Root();
-        root.getServer().listen(8000);
 
         root.handleRequests();
 
