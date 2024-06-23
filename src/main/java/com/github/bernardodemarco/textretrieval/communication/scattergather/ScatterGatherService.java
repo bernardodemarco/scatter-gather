@@ -2,14 +2,14 @@ package com.github.bernardodemarco.textretrieval.communication.scattergather;
 
 import com.github.bernardodemarco.textretrieval.communication.client.ClientConnection;
 import com.github.bernardodemarco.textretrieval.communication.client.TCPClientConnection;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
+import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
-
-import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
