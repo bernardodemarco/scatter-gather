@@ -1,5 +1,6 @@
-package com.github.bernardodemarco.textretrieval.communication;
+package com.github.bernardodemarco.textretrieval.communication.scattergather;
 
+import com.github.bernardodemarco.textretrieval.communication.client.ClientConnection;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,11 +12,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 
-public class ScatterGatherService {
+public class ScatterGatherService implements ScatterGather {
+    private final Logger logger = LogManager.getLogger(getClass());
+
     private final List<ClientConnection> connections;
     private final ExecutorService threadPool;
     private final List<Future<String>> futures = new ArrayList<>();
-    private final Logger logger = LogManager.getLogger(getClass());
 
     public ScatterGatherService(List<Integer> ports) {
         connections = openConnections(ports);
@@ -39,9 +41,11 @@ public class ScatterGatherService {
         connections.forEach(ClientConnection::stop);
     }
 
+    @Override
     public <T> void scatter(Collection<T> data) {
         int targetConnectionIndex = 0;
         int numberOfConnections = connections.size();
+        logger.debug("Scattering data [{}] to [{}] connections using round-robin algorithm.", data, numberOfConnections);
 
         for (T item : data) {
             ClientConnection connection = connections.get(targetConnectionIndex);
@@ -54,9 +58,11 @@ public class ScatterGatherService {
         }
     }
 
+    @Override
     public List<String> gather() {
         List<String> responses = new ArrayList<>();
 
+        logger.debug("Gathering data.");
         for (Future<String> future : futures) {
             String response;
             try {
@@ -71,7 +77,8 @@ public class ScatterGatherService {
         return responses;
     }
 
-    public void stopService() {
+    @Override
+    public void stop() {
         threadPool.shutdown();
         closeConnections();
     }
