@@ -34,7 +34,6 @@ public class ScatterGatherService implements ScatterGather {
             int port = address.getValue();
             ClientConnection connection = new TCPClientConnection(ip, port);
             connection.connect();
-            logger.info("Successfully connected to WORKER [{}:{}]", ip, port);
             connections.add(connection);
         });
 
