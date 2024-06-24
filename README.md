@@ -107,7 +107,7 @@ Após executar o _client_, ele se conectará ao _root_ e começará a enviar req
 
 A seguinte imagem representa um _overview_ do _design_ da implementação.
 
-![image](https://github.com/bernardodemarco/text-retrieval/assets/115510880/dc7baed4-6a6d-4390-b5a2-665e06961be0)
+![image](https://github.com/bernardodemarco/text-retrieval/assets/115510880/a7567055-047b-4834-97b4-1131e8dc1782)
 
 ### Componentes de comunicação
 
