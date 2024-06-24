@@ -4,7 +4,7 @@
 
 ## Tecnologias utilizadas
 
-A aplicação foi desenvolvida na linguagem de programação Java, e para a manipulação de _sockets_ foi utilizada suas implementações nativas (`java.net.Socket`, `java.net.ServerSocket`).
+A aplicação foi desenvolvida na linguagem de programação Java, e para a manipulação de _sockets_ foram utilizadas suas implementações nativas (`java.net.Socket` e `java.net.ServerSocket`).
 
 Para estruturação da aplicação, foi utilizado o gerenciador [Apache Maven](https://maven.apache.org/index.html). Além disso, para manipulação de JSONs foi utilizada a bibliteca [Gson](https://github.com/google/gson), e para _logs_ foi utilizado o [Apache Log4j](https://logging.apache.org/log4j/2.x/index.html).
 
@@ -22,7 +22,7 @@ mvn compile
 
 ### Execução
 
-Para execução, devem ser abertos quatro terminais, um para cada processo em execução. Em seguida, devem ser executados em ordem os _workers_, _root_ e o _client_.
+Para execução, devem ser abertos quatro terminais, um para cada processo a ser executado. Em seguida, devem ser executados, em ordem, os _workers_, _root_ e o _client_.
 
 1. Em um terminal, execute um _worker_:
     ```bash
@@ -36,12 +36,12 @@ Para execução, devem ser abertos quatro terminais, um para cada processo em ex
     ```bash
     mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.root.Root"
     ```
-4. Por fim, abra mais um terminal e execute o _client_:
+4. Em outro, execute o _client_:
     ```bash
     mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.client.Client"
     ```
 
-Após executar o _client_, ele se conectará ao _root_ e começará a enviar requisições. Um vídeo exemplificando a execução do programa pode ser encontrado nesse [_link_](https://www.youtube.com/watch?v=iwf3g23__EU).
+Após executar o _client_, ele se conectará ao _root_ e começará a enviar requisições. Um vídeo que exemplifica a execução do programa pode ser encontrado nesse [_link_](https://www.youtube.com/watch?v=iwf3g23__EU).
 
 ## Estrutura dos diretórios/pacotes
 
@@ -111,7 +111,7 @@ A seguinte imagem representa um _overview_ do _design_ da implementação.
 
 ### Componentes de comunicação
 
-Todos os nós da aplicação usufruem de dependências customizadas desenvolvidas visando encapsular e reutilzar conceitos de programação distribuída. Dentre eles, foram implementadas classes representando conexões TCP, servidores TCP e um serviço Scatter/Gather.
+Todos os nós da aplicação usufruem de dependências customizadas desenvolvidas visando encapsular e reutilzar conceitos de programação distribuída. Dentre eles, foram implementadas classes representando conexões TCP, servidores TCP e um serviço _Scatter/Gather_.
 
 #### `TCPClientConnection`
 A classe `TCPClientConnection` encapsula operações de criação de um _socket_, conexão a um outro _endpoint_, envio e recebimento de mensagens, e o fechamento da conexão.
@@ -119,16 +119,14 @@ A classe `TCPClientConnection` encapsula operações de criação de um _socket_
 Para uma classe utilizá-la como dependência, basta instanciá-la passando como parâmetro o endereço de rede e a porta. A classe `Client` e a `ScatterGatherService` a utilizam internamente.
 
 #### `TCPServer`
-Essa classe encapsula o funcionamento de um servidor TCP. Portanto, provê operações para escutar requisições em um porta, enviar e receber dados, e fechar o canal de comunicação.
-
-As classes `Root` e `Worker` a utilizam como dependência.
+Essa classe encapsula o funcionamento de um servidor TCP. Portanto, provê operações para escutar requisições em um porta, enviar e receber dados, e fechar o canal de comunicação. As classes `Root` e `Worker` a utilizam como dependência.
 
 #### `ScatterGatherService`
-Essa classe representa a implementação do _design pattern_ de programação distribuída _Scatter/Gather_. Ele prove operações para realizar o espalhamento (_scatter_) de requisições e a reunião (_gather_) das respostas.
+Essa classe representa a implementação do _design pattern_ de programação distribuída _Scatter/Gather_. Ele provê operações para realizar o espalhamento (_scatter_) de requisições e a reunião (_gather_) das respostas.
 
 Internamente, ela possui uma lista de conexões e um _thread pool_. Ao realizar o _scatter_, as requisições são distribuídas de maneira circular (_round robin_) para as conexões. No momento em que uma é enviada, uma _task_ é enviada ao _thread pool_ para escutar por um retorno.
 
-No momento em que é realizado o _gather_, cada retorno das tarefas enviadas é recuperado e retornado ao _caller_. Com isso, o processamento das tarefas enviadas para as requisições é realizado em paralelo, o que potencializa o desempenho da aplicação.
+Ao executar o _gather_, cada retorno das tarefas enviadas é recuperado e retornado ao _caller_. Com isso, o processamento das tarefas é realizado em paralelo, o que potencializa o desempenho da aplicação.
 
 ### Nós da aplicação
 
@@ -136,7 +134,7 @@ No momento em que é realizado o _gather_, cada retorno das tarefas enviadas é 
 
 O processo _client_ é o responsável por realizar as requisições de busca de texto ao sistema. Para isso, ele lê uma lista de _queries_ pré-definida, e as envia ao nó _Root_.
 
-O protocolo de comunicação utilizado estabelece as requisições do _Client_ ao _Root_ devem ser compostas por uma _string_ JSON no seguinte formato:
+O protocolo de comunicação utilizado estabelece que as requisições do _Client_ ao _Root_ devem ser compostas por uma _string_ JSON no seguinte formato:
 
 ```js
 {
@@ -144,7 +142,7 @@ O protocolo de comunicação utilizado estabelece as requisições do _Client_ a
 }
 ```
 
-Após enviar uma requisição, o _Client_ aguarda pelo seu retorno e antes de realizar a próxima aguarda um intervalo de tempo entre 1000 e 2000 milisegundos.
+Após enviar uma requisição, o _Client_ aguarda pelo seu retorno e, antes de realizar a próxima, suspende sua execução por um intervalo de tempo entre 1000 e 2000 milisegundos.
 
 A resposta que é retornada para cada _query_ segue o seguinte formato:
 ```js
@@ -166,14 +164,14 @@ A resposta que é retornada para cada _query_ segue o seguinte formato:
 
 O nó _Root_ possui como dependência um servidor e um serviço _Scatter/Gather_.
 
-Ao receber uma requisição, realiza o _parse_ da _query_, a convertendo em um conjunto de palavras-chave. Essas, por sua vez são distribuídas aos _workers_ através do serviço _Scatter/Gather_. Cada requisição ao _worker_ segue o seguinte formato:
+Ao receber uma requisição, realiza o _parse_ da _query_, a convertendo em um conjunto de palavras-chave. Essas, por sua vez, são distribuídas aos _workers_ através do serviço _Scatter/Gather_. Cada requisição ao _worker_ segue o seguinte formato:
 ```js
 {
     "keyword": "parallel and distributed computing"
 }
 ```
 
-Em seguida, aguarda as respostas dos _workers_ (_gather_) e trata os dados recebidos e retorna uma resposta ao cliente.
+Em seguida, aguarda as respostas dos _workers_ (_gather_), trata os dados recebidos e retorna uma resposta ao cliente.
 
 #### `Worker`
 
@@ -191,9 +189,9 @@ Cada _worker_ recebe uma palavra-chave e busca as suas ocorrências nos arquivos
 ## Exemplos de execução da aplicação
 
 Ao realizar a execução da aplicação, no terminal de cada processo é possível observar a geração de _logs_. Os _logs_ foram utilizados em três níveis:
-- `DEBUG`: _Logs_ utilizados para depurar e entender o contexto em que a aplicação está,
+- `DEBUG`: _Logs_ utilizados para depurar e entender o contexto em que a aplicação está.
 - `INFO`: _Logs_ com informações importantes, como estabelecimento de conexões e retorno de requisições.
-- `ERROR`: _Logs_ para eventuais erros que possam ocorrer e que não possam ser tratados em tempo de execução, como impossibilidade de ler um determinado arquivo.
+- `ERROR`: _Logs_ para eventuais erros que possam ocorrer e que não possam ser tratados em tempo de execução, como a impossibilidade de ler um determinado arquivo.
 
 ### Execução do `Client`
 
