@@ -4,6 +4,13 @@ This project implements the **Scatter and Gather** distributed computing design 
 
 [Apache Maven](https://maven.apache.org/index.html) is used for dependency management. The [Gson](https://github.com/google/gson) library handles JSON manipulation, and [Apache Log4j](https://logging.apache.org/log4j/2.x/index.html) is used for logging.
 
+- [Implementation Design](#implementation-design)
+- [Application Setup](#application-setup)
+- [Packages Structure](#packages-structure)
+- [Application Execution Examples](#application-execution-examples)
+
+<a name="implementation-design"></a>
+
 ## Implementation Design
 
 The following image provides an overview of the implementation design:
@@ -99,6 +106,8 @@ Each `Worker` node receives a keyword and searches for its occurrences across te
 ]
 ```
 
+<a name="application-setup"></a>
+
 ## Application Setup
 
 To run the application, Java 17 and Apache Maven 3.6.3 must be installed and properly configured.
@@ -130,7 +139,9 @@ To execute it, follow these steps in order:
 
 After launching the Client node, it will connect to the Root node and begin sending search requests.
 
-## Packages Structures
+<a name="package-structure"></a>
+
+## Packages Structure
 
 ```bash
 ├── pom.xml # Apache Maven pom.xml file
@@ -187,6 +198,7 @@ After launching the Client node, it will connect to the Root node and begin send
 │               ├── worker1.properties
 │               └── worker2.properties
 ```
+<a name="application-execution-examples"></a>
 
 ## Application Execution Examples
 
