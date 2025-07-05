@@ -4,6 +4,8 @@ This project implements the **Scatter and Gather** distributed computing design 
 
 [Apache Maven](https://maven.apache.org/index.html) is used for dependency management. The [Gson](https://github.com/google/gson) library handles JSON manipulation, and [Apache Log4j](https://logging.apache.org/log4j/2.x/index.html) is used for logging.
 
+## Table of Contents
+
 - [Implementation Design](#implementation-design)
 - [Application Setup](#application-setup)
 - [Packages Structure](#packages-structure)
