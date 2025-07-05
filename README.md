@@ -71,7 +71,6 @@ Each response returned for a query follows this format:
       ],
       "occurrences": 2
    },
-   // ...
 ]
 ```
 
@@ -97,7 +96,6 @@ Each `Worker` node receives a keyword and searches for its occurrences across te
       "fileName": "text.txt",
       "occurrences": 2
    },
-   // ...
 ]
 ```
 
