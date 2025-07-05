@@ -29,9 +29,9 @@ The `TCPClientConnection` class abstracts the creation of sockets, connection to
 
 To use this component, simply instantiate it with a target IP address and port. The `Client` and `ScatterGatherService` classes internally rely on this component.
 
-https://github.com/bernardodemarco/scatter-gather/blob/73f0aaade01351329fb28214b3dcda0fd2397074/src/main/java/com/github/bernardodemarco/textretrieval/communication/scattergather/ScatterGatherService.java#L29-L41
-
 https://github.com/bernardodemarco/scatter-gather/blob/73f0aaade01351329fb28214b3dcda0fd2397074/src/main/java/com/github/bernardodemarco/textretrieval/client/Client.java#L33-L34
+
+https://github.com/bernardodemarco/scatter-gather/blob/73f0aaade01351329fb28214b3dcda0fd2397074/src/main/java/com/github/bernardodemarco/textretrieval/communication/scattergather/ScatterGatherService.java#L29-L41
 
 #### `TCPServer`
 
@@ -65,9 +65,7 @@ The `Client` process is responsible for sending text search requests to the syst
 }
 ```
 
-After sending a request, the Client waits for the response. Before submitting the next query, it pauses execution for a random interval between 1000 and 2000 milliseconds.
-
-Each response returned for a query follows this format:
+After sending a request, the Client waits for the response. Before submitting the next query, it pauses execution for a random interval between 1000 and 2000 milliseconds. Each response returned for a query follows this format:
 
 ```json
 [
@@ -112,9 +110,7 @@ Each `Worker` node receives a keyword and searches for its occurrences across te
 
 ## Application Setup
 
-To run the application, Java 17 and Apache Maven 3.6.3 must be installed and properly configured.
-
-To compile the application, run:
+To run the application, Java 17 and Apache Maven 3.6.3 must be installed and properly configured. To compile the application, run:
 
 ```bash
 mvn compile
@@ -123,21 +119,21 @@ mvn compile
 To execute it, follow these steps in order:
 
 1. Run a Worker node:
-  ```bash
-  mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.worker.instances.Worker1"
-    ```
+```bash
+mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.worker.instances.Worker1"
+```
 2. Run another Worker node:
-  ```bash
-  mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.worker.instances.Worker2"
-  ```
+```bash
+mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.worker.instances.Worker2"
+```
 3. Run the Root node:
-  ```bash
-  mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.root.Root"
-  ```
+```bash
+mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.root.Root"
+```
 4. Run the Client node:
-  ```bash
-  mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.client.Client"
-  ```
+```bash
+mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.client.Client"
+```
 
 After launching the Client node, it will connect to the Root node and begin sending search requests.
 
@@ -298,12 +294,12 @@ When executing the Client node, the following log messages are particularly rele
 ```
 
 ```bash
-# Gathering requests for the Worker nodes
+# Scattering requests for the Worker nodes
 2024-06-23 20:43:34 [DEBUG] (c.g.b.t.c.s.ScatterGatherService) - Scattering data [[{"keyword":"programming"}, {"keyword":"concurrent"}, {"keyword":"and"}, {"keyword":"parallel"}, {"keyword":"distributed"}]] to [2] connections using round-robin algorithm.
 ```
 
 ```bash
-# Received responses from the Worker nodes
+# Gathered responses from the Worker nodes
 2024-06-23 20:43:34 [DEBUG] (c.g.b.t.r.Root) - Received [[[{"fileName":"text1.txt","occurrences":3},{"fileName":"text2.txt","occurrences":3},{"fileName":"text3.txt","occurrences":2},{"fileName":"text4.txt","occurrences":2},{"fileName":"text5.txt","occurrences":1}], [], [{"fileName":"text1.txt","occurrences":5},{"fileName":"text2.txt","occurrences":9},{"fileName":"text3.txt","occurrences":5},{"fileName":"text4.txt","occurrences":1},{"fileName":"text5.txt","occurrences":5}], [{"fileName":"text1.txt","occurrences":4},{"fileName":"text3.txt","occurrences":4},{"fileName":"text5.txt","occurrences":5}], [{"fileName":"text2.txt","occurrences":5},{"fileName":"text4.txt","occurrences":4}]]] from workers.
 ```
 
