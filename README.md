@@ -1,54 +1,142 @@
 # Scatter and Gather Design Pattern Implementation
 
-##### Bernardo De Marco Gonçalves - 22102557
+This project implements the **Scatter and Gather** distributed computing design pattern in Java. Each system component runs as a separate Java process. Communication between components is established using Java’s native socket classes: `java.net.Socket` and `java.net.ServerSocket`.
 
-## Tecnologias utilizadas
+[Apache Maven](https://maven.apache.org/index.html) is used for dependency management. The [Gson](https://github.com/google/gson) library handles JSON manipulation, and [Apache Log4j](https://logging.apache.org/log4j/2.x/index.html) is used for logging.
 
-A aplicação foi desenvolvida na linguagem de programação Java, e para a manipulação de _sockets_ foram utilizadas suas implementações nativas (`java.net.Socket` e `java.net.ServerSocket`).
+## Implementation Design
 
-Para estruturação da aplicação, foi utilizado o gerenciador [Apache Maven](https://maven.apache.org/index.html). Além disso, para manipulação de JSONs foi utilizada a bibliteca [Gson](https://github.com/google/gson), e para _logs_ foi utilizado o [Apache Log4j](https://logging.apache.org/log4j/2.x/index.html).
+The following image provides an overview of the implementation design:
 
-## _Setup_ da aplicação
+![image](https://github.com/bernardodemarco/text-retrieval/assets/115510880/a7567055-047b-4834-97b4-1131e8dc1782)
 
-Para execução da aplicação, é necessário ter o Java 17 e o Apache Maven 3.6.3 instalados e configurados.
+### Communication Components
 
-### Compilação
+All nodes in the system rely on custom-built dependencies that encapsulate, abstract, and promote reuse of distributed programming concepts. As such, components were implemented to represent **TCP connections**, **TCP servers** and a **Scatter and Gather** service.
 
-Para compilação, deve-se executar:
+#### `TCPClientConnection`
+
+The `TCPClientConnection` class abstracts the creation of sockets, connection to endpoints, message transmission and reception and connection teardown.
+
+To use this component, simply instantiate it with a target IP address and port. The `Client` and `ScatterGatherService` classes internally rely on this component.
+
+https://github.com/bernardodemarco/scatter-gather/blob/73f0aaade01351329fb28214b3dcda0fd2397074/src/main/java/com/github/bernardodemarco/textretrieval/communication/scattergather/ScatterGatherService.java#L29-L41
+
+https://github.com/bernardodemarco/scatter-gather/blob/73f0aaade01351329fb28214b3dcda0fd2397074/src/main/java/com/github/bernardodemarco/textretrieval/client/Client.java#L33-L34
+
+#### `TCPServer`
+
+This class encapsulates the behavior and responsibilities of a TCP server. It provides operations for listening on a port, sending and receiving data, and closing the communication channel. The `Root` and `Worker` classes use this component.
+
+https://github.com/bernardodemarco/scatter-gather/blob/73f0aaade01351329fb28214b3dcda0fd2397074/src/main/java/com/github/bernardodemarco/textretrieval/root/Root.java#L36
+
+https://github.com/bernardodemarco/scatter-gather/blob/73f0aaade01351329fb28214b3dcda0fd2397074/src/main/java/com/github/bernardodemarco/textretrieval/root/Root.java#L43
+
+#### `ScatterGatherService`
+
+This class implements the **Scatter and Gather** design pattern. It exposes methods for scattering requests and gathering responses.
+
+Internally, it maintains a list of active connections and a thread pool. When scattering requests, the service distributes them in a round-robin fashion. For each sent request, a task is submitted to the thread pool to listen for the corresponding response.
+
+https://github.com/bernardodemarco/scatter-gather/blob/73f0aaade01351329fb28214b3dcda0fd2397074/src/main/java/com/github/bernardodemarco/textretrieval/communication/scattergather/ScatterGatherService.java#L47-L62
+
+When gathering, the service waits until all thread pool tasks have completed. Once all responses have been collected, they are returned to the caller.
+
+https://github.com/bernardodemarco/scatter-gather/blob/73f0aaade01351329fb28214b3dcda0fd2397074/src/main/java/com/github/bernardodemarco/textretrieval/communication/scattergather/ScatterGatherService.java#L64-L81
+
+### Application Nodes
+
+#### `Client`
+
+The `Client` process is responsible for sending text search requests to the system's `Root` node. The communication protocol defines that requests from the Client to the Root must follow this structure:
+
+```json
+{
+    "query": "parallel and distributed computing"
+}
+```
+
+After sending a request, the Client waits for the response. Before submitting the next query, it pauses execution for a random interval between 1000 and 2000 milliseconds.
+
+Each response returned for a query follows this format:
+
+```json
+[
+   {
+      "fileName": "text.txt",
+      "fileContent": [
+         "first line",
+         "second line",
+         "third and last line"
+      ],
+      "occurrences": 2
+   },
+   // ...
+]
+```
+
+#### `Root`
+
+The `Root` node depends on the TCP server and the `ScatterGatherService`. Upon receiving a request, it parses the query into a set of keywords. These keywords are then distributed to the Worker nodes via the Scatter and Gather service. Each request sent to a Worker node follows this structure:
+
+```json
+{
+    "keyword": "parallel and distributed computing"
+}
+```
+
+The Root then gathers all responses, parses them, and builds the final response to return to the Client.
+
+#### `Worker`
+
+Each `Worker` node receives a keyword and searches for its occurrences across text files. After completing the search, it returns a response to the Root node in the following format:
+
+```json
+[
+   {
+      "fileName": "text.txt",
+      "occurrences": 2
+   },
+   // ...
+]
+```
+
+## Application Setup
+
+To run the application, Java 17 and Apache Maven 3.6.3 must be installed and properly configured.
+
+To compile the application, run:
 
 ```bash
 mvn compile
 ```
 
-### Execução
+To execute it, follow these steps in order:
 
-Para execução, devem ser abertos quatro terminais, um para cada processo a ser executado. Em seguida, devem ser executados, em ordem, os _workers_, _root_ e o _client_.
+1. Run a Worker node:
+  ```bash
+  mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.worker.instances.Worker1"
+    ```
+2. Run another Worker node:
+  ```bash
+  mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.worker.instances.Worker2"
+  ```
+3. Run the Root node:
+  ```bash
+  mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.root.Root"
+  ```
+4. Run the Client node:
+  ```bash
+  mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.client.Client"
+  ```
 
-1. Em um terminal, execute um _worker_:
-    ```bash
-    mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.worker.instances.Worker1"
-    ```
-2. Em outro, execute o outro _worker_:
-    ```bash
-    mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.worker.instances.Worker2"
-    ```
-3. Em outro, execute o _root_:
-    ```bash
-    mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.root.Root"
-    ```
-4. Em outro, execute o _client_:
-    ```bash
-    mvn exec:java -Dexec.mainClass="com.github.bernardodemarco.textretrieval.client.Client"
-    ```
+After launching the Client node, it will connect to the Root node and begin sending search requests.
 
-Após executar o _client_, ele se conectará ao _root_ e começará a enviar requisições. Um vídeo que exemplifica a execução do programa pode ser encontrado nesse [_link_](https://www.youtube.com/watch?v=iwf3g23__EU).
-
-## Estrutura dos diretórios/pacotes
+## Packages Structures
 
 ```bash
 ├── pom.xml # Apache Maven pom.xml file
 ├── README.md # docs in markdown
-├── docs.pdf # docs in pdf
 ├── src
 │   └── main # source code container
 │       ├── java
@@ -100,115 +188,32 @@ Após executar o _client_, ele se conectará ao _root_ e começará a enviar req
 │           └── workers
 │               ├── worker1.properties
 │               └── worker2.properties
-
 ```
 
-## _Design da aplicação_
+## Application Execution Examples
 
-A seguinte imagem representa um _overview_ do _design_ da implementação.
+When running the application, logs are generated to provide insight into the system's behavior. Three log levels are used:
 
-![image](https://github.com/bernardodemarco/text-retrieval/assets/115510880/a7567055-047b-4834-97b4-1131e8dc1782)
+- `DEBUG`: Provides detailed information useful for debugging and understanding the system's internal state.
+- `INFO`: Displays important runtime events, such as connection establishments and request responses.
+- `ERROR`: Indicates unexpected errors that occur during execution and cannot be gracefully handled, such as a failure to read a text file.
 
-### Componentes de comunicação
+### `Client` Execution
 
-Todos os nós da aplicação usufruem de dependências customizadas desenvolvidas visando encapsular e reutilzar conceitos de programação distribuída. Dentre eles, foram implementadas classes representando conexões TCP, servidores TCP e um serviço _Scatter/Gather_.
-
-#### `TCPClientConnection`
-A classe `TCPClientConnection` encapsula operações de criação de um _socket_, conexão a um outro _endpoint_, envio e recebimento de mensagens, e o fechamento da conexão.
-
-Para uma classe utilizá-la como dependência, basta instanciá-la passando como parâmetro o endereço de rede e a porta. A classe `Client` e a `ScatterGatherService` a utilizam internamente.
-
-#### `TCPServer`
-Essa classe encapsula o funcionamento de um servidor TCP. Portanto, provê operações para escutar requisições em um porta, enviar e receber dados, e fechar o canal de comunicação. As classes `Root` e `Worker` a utilizam como dependência.
-
-#### `ScatterGatherService`
-Essa classe representa a implementação do _design pattern_ de programação distribuída _Scatter/Gather_. Ele provê operações para realizar o espalhamento (_scatter_) de requisições e a reunião (_gather_) das respostas.
-
-Internamente, ela possui uma lista de conexões e um _thread pool_. Ao realizar o _scatter_, as requisições são distribuídas de maneira circular (_round robin_) para as conexões. No momento em que uma é enviada, uma _task_ é enviada ao _thread pool_ para escutar por um retorno.
-
-Ao executar o _gather_, cada retorno das tarefas enviadas é recuperado e retornado ao _caller_. Com isso, o processamento das tarefas é realizado em paralelo, o que potencializa o desempenho da aplicação.
-
-### Nós da aplicação
-
-#### `Client`
-
-O processo _client_ é o responsável por realizar as requisições de busca de texto ao sistema. Para isso, ele lê uma lista de _queries_ pré-definida, e as envia ao nó _Root_.
-
-O protocolo de comunicação utilizado estabelece que as requisições do _Client_ ao _Root_ devem ser compostas por uma _string_ JSON no seguinte formato:
-
-```js
-{
-    "query": "parallel and distributed computing"
-}
-```
-
-Após enviar uma requisição, o _Client_ aguarda pelo seu retorno e, antes de realizar a próxima, suspende sua execução por um intervalo de tempo entre 1000 e 2000 milisegundos.
-
-A resposta que é retornada para cada _query_ segue o seguinte formato:
-```js
-[
-   {
-      "fileName": "text.txt",
-      "fileContent": [
-         "first line",
-         "second line",
-         "third and last line"
-      ],
-      "occurrences": 2
-   },
-   // ...
-]
-```
-
-#### `Root`
-
-O nó _Root_ possui como dependência um servidor e um serviço _Scatter/Gather_.
-
-Ao receber uma requisição, realiza o _parse_ da _query_, a convertendo em um conjunto de palavras-chave. Essas, por sua vez, são distribuídas aos _workers_ através do serviço _Scatter/Gather_. Cada requisição ao _worker_ segue o seguinte formato:
-```js
-{
-    "keyword": "parallel and distributed computing"
-}
-```
-
-Em seguida, aguarda as respostas dos _workers_ (_gather_), trata os dados recebidos e retorna uma resposta ao cliente.
-
-#### `Worker`
-
-Cada _worker_ recebe uma palavra-chave e busca as suas ocorrências nos arquivos de texto. Uma vez realizado o processamento, retorna uma resposta ao _Root_ com o formato:
-```js
-[
-   {
-      "fileName": "text.txt",
-      "occurrences": 2
-   },
-   // ...
-]
-```
-
-## Exemplos de execução da aplicação
-
-Ao realizar a execução da aplicação, no terminal de cada processo é possível observar a geração de _logs_. Os _logs_ foram utilizados em três níveis:
-- `DEBUG`: _Logs_ utilizados para depurar e entender o contexto em que a aplicação está.
-- `INFO`: _Logs_ com informações importantes, como estabelecimento de conexões e retorno de requisições.
-- `ERROR`: _Logs_ para eventuais erros que possam ocorrer e que não possam ser tratados em tempo de execução, como a impossibilidade de ler um determinado arquivo.
-
-### Execução do `Client`
-
-Ao executar o processo `Client`, os seguintes _logs_ são interessantes:
+When executing the Client node, the following log messages are particularly relevant:
 
 ```bash
-# cliente se conectou com sucesso ao servidor Root
+# client successfully connected to the Root node/server
 2024-06-23 20:43:34 [INFO] (c.g.b.t.c.c.TCPClientConnection) - Successfully connected to server [127.0.0.1:8000].
 ```
 
 ```bash
-# request sendo enviado
+# Request being sent to the Root node/server
 2024-06-23 20:43:34 [DEBUG] (c.g.b.t.c.Client) - Sending query [{"query":"concurrent and parallel and distributed programming"}].
 ```
 
 ```bash
-# response recebida
+# Response received from the Root node/server
 2024-06-23 20:43:34 [INFO] (c.g.b.t.c.Client) - Received query response [[
   {
     "fileName": "text5.txt",
@@ -259,51 +264,51 @@ Ao executar o processo `Client`, os seguintes _logs_ são interessantes:
 ```
 
 ```bash
-# informando que vai esperar para realizar a próxima query
+# Informing that it will wait to perform the next request query
 2024-06-23 20:43:36 [DEBUG] (c.g.b.t.c.Client) - Sleeping for 1329 milliseconds.
 ```
 
-### Execução do `Root`
+### `Root` Execution
 
 ```bash
-# conectou-se ao worker 1
+# Successfully connected to the Worker node listening on port 8001
 2024-06-23 20:43:34 [INFO] (c.g.b.t.c.c.TCPClientConnection) - Successfully connected to server [127.0.0.1:8001].
 ```
 
 ```bash
-# conectou-se ao worker 2
+# Successfully connected to the Worker node listening on port 8002
 2024-06-23 20:43:34 [INFO] (c.g.b.t.c.c.TCPClientConnection) - Successfully connected to server [127.0.0.1:8002].
 ```
 
 ```bash
-# recebeu requisição do cliente
+# Received request from the Client
 2024-06-23 20:43:34 [INFO] (c.g.b.t.r.Root) - Received query [{"query":"concurrent and parallel and distributed programming"}] from client.
 ```
 
 ```bash
-# espalhando as requisições para os workers
+# Gathering requests for the Worker nodes
 2024-06-23 20:43:34 [DEBUG] (c.g.b.t.c.s.ScatterGatherService) - Scattering data [[{"keyword":"programming"}, {"keyword":"concurrent"}, {"keyword":"and"}, {"keyword":"parallel"}, {"keyword":"distributed"}]] to [2] connections using round-robin algorithm.
 ```
 
 ```bash
-# retorno dos jobs dos workers
+# Received responses from the Worker nodes
 2024-06-23 20:43:34 [DEBUG] (c.g.b.t.r.Root) - Received [[[{"fileName":"text1.txt","occurrences":3},{"fileName":"text2.txt","occurrences":3},{"fileName":"text3.txt","occurrences":2},{"fileName":"text4.txt","occurrences":2},{"fileName":"text5.txt","occurrences":1}], [], [{"fileName":"text1.txt","occurrences":5},{"fileName":"text2.txt","occurrences":9},{"fileName":"text3.txt","occurrences":5},{"fileName":"text4.txt","occurrences":1},{"fileName":"text5.txt","occurrences":5}], [{"fileName":"text1.txt","occurrences":4},{"fileName":"text3.txt","occurrences":4},{"fileName":"text5.txt","occurrences":5}], [{"fileName":"text2.txt","occurrences":5},{"fileName":"text4.txt","occurrences":4}]]] from workers.
 ```
 
-### Execução do `Worker`
+### `Worker` Execution
 
 ```bash
-# servidor Worker escutando requisições
+# Worker server listening for requests
 2024-06-23 20:43:34 [INFO] (c.g.b.t.c.s.TCPServer) - Listening on port 8001.
 ```
 
 ```bash
-# recebeu keyword
+# Received a request with a keyword
 2024-06-23 20:43:34 [INFO] (c.g.b.t.w.Worker) - Received keyword [{"keyword":"programming"}].
 ```
 
 ```bash
-# buscas das keywords nos arquivos de texto
+# Searches for keywords in the text files
 2024-06-23 20:43:34 [DEBUG] (c.g.b.t.w.Worker) - Keyword [programming] has appeared [3] times in [text1.txt]
 2024-06-23 20:43:34 [DEBUG] (c.g.b.t.w.Worker) - Keyword [programming] has appeared [3] times in [text2.txt]
 2024-06-23 20:43:34 [DEBUG] (c.g.b.t.w.Worker) - Keyword [programming] has appeared [2] times in [text3.txt]
